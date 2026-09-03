@@ -235,6 +235,86 @@ namespace Dota2GSI.Nodes.PlayerProvider
         /// </summary>
         public readonly int CampsStacked;
 
+        /// <summary>
+        /// The amount of gold earned by the player from summon kills.
+        /// </summary>
+        public readonly int GoldFromSummonKills;
+
+        /// <summary>
+        /// The amount of water runes activated by the player.
+        /// </summary>
+        public readonly int WaterRunesActivated;
+
+        /// <summary>
+        /// The amount of bounty runes activated by the player.
+        /// </summary>
+        public readonly int BountyRunesActivated;
+
+        /// <summary>
+        /// The amount of wisdom shrines taken by the player.
+        /// </summary>
+        public readonly int WisdomShrinesTaken;
+
+        /// <summary>
+        /// The amount of pre-reduction physical damage received by the player.
+        /// </summary>
+        public readonly int DamageReceivedPreReductionPhysical;
+
+        /// <summary>
+        /// The amount of pre-reduction magical damage received by the player.
+        /// </summary>
+        public readonly int DamageReceivedPreReductionMagical;
+
+        /// <summary>
+        /// The amount of pre-reduction pure damage received by the player.
+        /// </summary>
+        public readonly int DamageReceivedPreReductionPure;
+
+        /// <summary>
+        /// The amount of post-reduction physical damage received by the player.
+        /// </summary>
+        public readonly int DamageReceivedPostReductionPhysical;
+
+        /// <summary>
+        /// The amount of post-reduction magical damage received by the player.
+        /// </summary>
+        public readonly int DamageReceivedPostReductionMagical;
+
+        /// <summary>
+        /// The amount of post-reduction pure damage received by the player.
+        /// </summary>
+        public readonly int DamageReceivedPostReductionPure;
+
+        /// <summary>
+        /// The amount of pre-reduction physical damage dealt by the player.
+        /// </summary>
+        public readonly int DamageOutgoingPreReductionPhysical;
+
+        /// <summary>
+        /// The amount of pre-reduction magical damage dealt by the player.
+        /// </summary>
+        public readonly int DamageOutgoingPreReductionMagical;
+
+        /// <summary>
+        /// The amount of pre-reduction pure damage dealt by the player.
+        /// </summary>
+        public readonly int DamageOutgoingPreReductionPure;
+
+        /// <summary>
+        /// The amount of post-reduction physical damage dealt by the player.
+        /// </summary>
+        public readonly int DamageOutgoingPostReductionPhysical;
+
+        /// <summary>
+        /// The amount of post-reduction magical damage dealt by the player.
+        /// </summary>
+        public readonly int DamageOutgoingPostReductionMagical;
+
+        /// <summary>
+        /// The amount of post-reduction pure damage dealt by the player.
+        /// </summary>
+        public readonly int DamageOutgoingPostReductionPure;
+
         private Regex _victim_id_regex = new Regex(@"victimid_(\d+)");
 
         internal PlayerDetails(JObject parsed_data = null) : base(parsed_data)
@@ -285,6 +365,22 @@ namespace Dota2GSI.Nodes.PlayerProvider
             ItemGoldSpent = GetInt("item_gold_spent");
             GoldLostToDeath = GetInt("gold_lost_to_death");
             GoldSpentOnBuybacks = GetInt("gold_spent_on_buybacks");
+            GoldFromSummonKills = GetInt("gold_from_summon_kills");
+            WaterRunesActivated = GetInt("water_runes_activated");
+            BountyRunesActivated = GetInt("bounty_runes_activated");
+            WisdomShrinesTaken = GetInt("wisdom_shrines_taken");
+            DamageReceivedPreReductionPhysical = GetInt("damage_received_pre_reduction_physical");
+            DamageReceivedPreReductionMagical = GetInt("damage_received_pre_reduction_magical");
+            DamageReceivedPreReductionPure = GetInt("damage_received_pre_reduction_pure");
+            DamageReceivedPostReductionPhysical = GetInt("damage_received_post_reduction_physical");
+            DamageReceivedPostReductionMagical = GetInt("damage_received_post_reduction_magical");
+            DamageReceivedPostReductionPure = GetInt("damage_received_post_reduction_pure");
+            DamageOutgoingPreReductionPhysical = GetInt("damage_outgoing_pre_reduction_physical");
+            DamageOutgoingPreReductionMagical = GetInt("damage_outgoing_pre_reduction_magical");
+            DamageOutgoingPreReductionPure = GetInt("damage_outgoing_pre_reduction_pure");
+            DamageOutgoingPostReductionPhysical = GetInt("damage_outgoing_post_reduction_physical");
+            DamageOutgoingPostReductionMagical = GetInt("damage_outgoing_post_reduction_magical");
+            DamageOutgoingPostReductionPure = GetInt("damage_outgoing_post_reduction_pure");
 
             Hero = new TeamHeroDetails(GetJObject("hero"));
             Abilities = new TeamAbilitiesDetails(GetJObject("abilities"));
@@ -332,7 +428,23 @@ namespace Dota2GSI.Nodes.PlayerProvider
                 $"WardsPlaced: {WardsPlaced}, " +
                 $"WardsDestroyed: {WardsDestroyed}, " +
                 $"RunesActivated: {RunesActivated}, " +
-                $"CampsStacked: {CampsStacked}" +
+                $"CampsStacked: {CampsStacked}, " +
+                $"GoldFromSummonKills: {GoldFromSummonKills}, " +
+                $"WaterRunesActivated: {WaterRunesActivated}, " +
+                $"BountyRunesActivated: {BountyRunesActivated}, " +
+                $"WisdomShrinesTaken: {WisdomShrinesTaken}, " +
+                $"DamageReceivedPreReductionPhysical: {DamageReceivedPreReductionPhysical}, " +
+                $"DamageReceivedPreReductionMagical: {DamageReceivedPreReductionMagical}, " +
+                $"DamageReceivedPreReductionPure: {DamageReceivedPreReductionPure}, " +
+                $"DamageReceivedPostReductionPhysical: {DamageReceivedPostReductionPhysical}, " +
+                $"DamageReceivedPostReductionMagical: {DamageReceivedPostReductionMagical}, " +
+                $"DamageReceivedPostReductionPure: {DamageReceivedPostReductionPure}, " +
+                $"DamageOutgoingPreReductionPhysical: {DamageOutgoingPreReductionPhysical}, " +
+                $"DamageOutgoingPreReductionMagical: {DamageOutgoingPreReductionMagical}, " +
+                $"DamageOutgoingPreReductionPure: {DamageOutgoingPreReductionPure}, " +
+                $"DamageOutgoingPostReductionPhysical: {DamageOutgoingPostReductionPhysical}, " +
+                $"DamageOutgoingPostReductionMagical: {DamageOutgoingPostReductionMagical}, " +
+                $"DamageOutgoingPostReductionPure: {DamageOutgoingPostReductionPure}" +
                 $"]";
         }
 
@@ -383,7 +495,23 @@ namespace Dota2GSI.Nodes.PlayerProvider
                 WardsPlaced.Equals(other.WardsPlaced) &&
                 WardsDestroyed.Equals(other.WardsDestroyed) &&
                 RunesActivated.Equals(other.RunesActivated) &&
-                CampsStacked.Equals(other.CampsStacked);
+                CampsStacked.Equals(other.CampsStacked) &&
+                GoldFromSummonKills.Equals(other.GoldFromSummonKills) &&
+                WaterRunesActivated.Equals(other.WaterRunesActivated) &&
+                BountyRunesActivated.Equals(other.BountyRunesActivated) &&
+                WisdomShrinesTaken.Equals(other.WisdomShrinesTaken) &&
+                DamageReceivedPreReductionPhysical.Equals(other.DamageReceivedPreReductionPhysical) &&
+                DamageReceivedPreReductionMagical.Equals(other.DamageReceivedPreReductionMagical) &&
+                DamageReceivedPreReductionPure.Equals(other.DamageReceivedPreReductionPure) &&
+                DamageReceivedPostReductionPhysical.Equals(other.DamageReceivedPostReductionPhysical) &&
+                DamageReceivedPostReductionMagical.Equals(other.DamageReceivedPostReductionMagical) &&
+                DamageReceivedPostReductionPure.Equals(other.DamageReceivedPostReductionPure) &&
+                DamageOutgoingPreReductionPhysical.Equals(other.DamageOutgoingPreReductionPhysical) &&
+                DamageOutgoingPreReductionMagical.Equals(other.DamageOutgoingPreReductionMagical) &&
+                DamageOutgoingPreReductionPure.Equals(other.DamageOutgoingPreReductionPure) &&
+                DamageOutgoingPostReductionPhysical.Equals(other.DamageOutgoingPostReductionPhysical) &&
+                DamageOutgoingPostReductionMagical.Equals(other.DamageOutgoingPostReductionMagical) &&
+                DamageOutgoingPostReductionPure.Equals(other.DamageOutgoingPostReductionPure);
         }
 
         /// <inheritdoc/>
@@ -429,6 +557,22 @@ namespace Dota2GSI.Nodes.PlayerProvider
             hashCode = hashCode * -112730515 + WardsDestroyed.GetHashCode();
             hashCode = hashCode * -112730515 + RunesActivated.GetHashCode();
             hashCode = hashCode * -112730515 + CampsStacked.GetHashCode();
+            hashCode = hashCode * -112730515 + GoldFromSummonKills.GetHashCode();
+            hashCode = hashCode * -112730515 + WaterRunesActivated.GetHashCode();
+            hashCode = hashCode * -112730515 + BountyRunesActivated.GetHashCode();
+            hashCode = hashCode * -112730515 + WisdomShrinesTaken.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageReceivedPreReductionPhysical.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageReceivedPreReductionMagical.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageReceivedPreReductionPure.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageReceivedPostReductionPhysical.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageReceivedPostReductionMagical.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageReceivedPostReductionPure.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageOutgoingPreReductionPhysical.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageOutgoingPreReductionMagical.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageOutgoingPreReductionPure.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageOutgoingPostReductionPhysical.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageOutgoingPostReductionMagical.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageOutgoingPostReductionPure.GetHashCode();
             return hashCode;
         }
     }

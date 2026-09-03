@@ -236,6 +236,16 @@ namespace Dota2GSI.Nodes.HeroProvider
         /// </summary>
         public readonly int AttributesLevel;
 
+        /// <summary>
+        /// The hero's selected facet ID.
+        /// </summary>
+        public readonly int Facet;
+
+        /// <summary>
+        /// The hero's permanent buffs. Key is the buff name, value is the stack count.
+        /// </summary>
+        public readonly NodeMap<string, int> PermanentBuffs = new NodeMap<string, int>();
+
         internal HeroDetails(JObject parsed_data = null) : base(parsed_data)
         {
             Location = new Vector2D(GetInt("xpos"), GetInt("ypos"));
@@ -329,6 +339,20 @@ namespace Dota2GSI.Nodes.HeroProvider
             }
 
             AttributesLevel = GetInt("attributes_level");
+            Facet = GetInt("facet");
+
+            var permanent_buffs = GetJObject("permanent_buffs");
+            if (permanent_buffs != null)
+            {
+                foreach (var property in permanent_buffs.Properties())
+                {
+                    int stack_count;
+                    if (int.TryParse(property.Value.ToString(), out stack_count))
+                    {
+                        PermanentBuffs.Add(property.Name, stack_count);
+                    }
+                }
+            }
         }
 
         /// <inheritdoc/>
@@ -356,7 +380,9 @@ namespace Dota2GSI.Nodes.HeroProvider
                 $"HasAghanimsShardUpgrade: {HasAghanimsShardUpgrade}, " +
                 $"SelectedUnit: {SelectedUnit}, " +
                 $"TalentTree: {TalentTree}, " +
-                $"AttributesLevel: {AttributesLevel}" +
+                $"AttributesLevel: {AttributesLevel}, " +
+                $"Facet: {Facet}, " +
+                $"PermanentBuffs: {PermanentBuffs}" +
                 $"]";
         }
 
@@ -389,7 +415,9 @@ namespace Dota2GSI.Nodes.HeroProvider
                 HasAghanimsShardUpgrade.Equals(other.HasAghanimsShardUpgrade) &&
                 SelectedUnit.Equals(other.SelectedUnit) &&
                 Enumerable.SequenceEqual(TalentTree, other.TalentTree) &&
-                AttributesLevel.Equals(other.AttributesLevel);
+                AttributesLevel.Equals(other.AttributesLevel) &&
+                Facet.Equals(other.Facet) &&
+                PermanentBuffs.Equals(other.PermanentBuffs);
         }
 
         /// <inheritdoc/>
@@ -417,6 +445,8 @@ namespace Dota2GSI.Nodes.HeroProvider
             hashCode = hashCode * -287957234 + SelectedUnit.GetHashCode();
             hashCode = hashCode * -287957234 + TalentTree.GetHashCode();
             hashCode = hashCode * -287957234 + AttributesLevel.GetHashCode();
+            hashCode = hashCode * -287957234 + Facet.GetHashCode();
+            hashCode = hashCode * -287957234 + PermanentBuffs.GetHashCode();
             return hashCode;
         }
     }
