@@ -201,6 +201,16 @@ namespace Dota2GSI.Nodes.PlayerProvider
         public readonly int GoldSpentOnBuybacks;
 
         /// <summary>
+        /// The player's hero state (only present in spectator team rosters).
+        /// </summary>
+        public readonly TeamHeroDetails Hero;
+
+        /// <summary>
+        /// The player's abilities (only present in spectator team rosters).
+        /// </summary>
+        public readonly TeamAbilitiesDetails Abilities;
+
+        /// <summary>
         /// The amount of wards the player has purchased. (SPECTATOR ONLY)
         /// </summary>
         public readonly int WardsPurchased;
@@ -275,6 +285,9 @@ namespace Dota2GSI.Nodes.PlayerProvider
             ItemGoldSpent = GetInt("item_gold_spent");
             GoldLostToDeath = GetInt("gold_lost_to_death");
             GoldSpentOnBuybacks = GetInt("gold_spent_on_buybacks");
+
+            Hero = new TeamHeroDetails(GetJObject("hero"));
+            Abilities = new TeamAbilitiesDetails(GetJObject("abilities"));
         }
 
         /// <inheritdoc/>
@@ -417,6 +430,149 @@ namespace Dota2GSI.Nodes.PlayerProvider
             hashCode = hashCode * -112730515 + RunesActivated.GetHashCode();
             hashCode = hashCode * -112730515 + CampsStacked.GetHashCode();
             return hashCode;
+        }
+    }
+
+    /// <summary>
+    /// Hero summary for a player in a spectator team roster, nested under
+    /// <c>player.teamN.playerM.hero</c>. Includes liveness and buyback state
+    /// that the top-level local-player hero node does not provide.
+    /// </summary>
+    public class TeamHeroDetails : Node
+    {
+        /// <summary>Hero id (0 when not picked yet).</summary>
+        public readonly int ID;
+        /// <summary>Hero unit name (e.g. "npc_dota_hero_antimage").</summary>
+        public readonly string Name;
+        /// <summary>Whether the hero is currently alive.</summary>
+        public readonly bool Alive;
+        /// <summary>Seconds until the hero respawns.</summary>
+        public readonly int RespawnSeconds;
+        /// <summary>Current buyback cost in gold.</summary>
+        public readonly int BuybackCost;
+        /// <summary>Seconds of remaining buyback cooldown.</summary>
+        public readonly int BuybackCooldown;
+        /// <summary>Current health as a percent (0..100).</summary>
+        public readonly int HealthPercent;
+        /// <summary>Current mana as a percent (0..100).</summary>
+        public readonly int ManaPercent;
+
+        internal TeamHeroDetails(JObject parsed_data = null) : base(parsed_data)
+        {
+            var id = 0;
+            var name = string.Empty;
+            var alive = true;
+            var respawn = 0;
+            var buybackCost = 0;
+            var buybackCd = -1;
+            var hp = 0;
+            var mp = 0;
+
+            if (parsed_data != null)
+            {
+                id = ReadInt(parsed_data, "id", 0);
+                name = parsed_data["name"]?.ToString() ?? string.Empty;
+                alive = ReadBool(parsed_data, "alive", true);
+                respawn = ReadInt(parsed_data, "respawn_seconds", 0);
+                buybackCost = ReadInt(parsed_data, "buyback_cost", 0);
+                buybackCd = ReadInt(parsed_data, "buyback_cooldown", -1);
+                hp = ReadInt(parsed_data, "health_percent", 0);
+                mp = ReadInt(parsed_data, "mana_percent", 0);
+            }
+
+            ID = id;
+            Name = name;
+            Alive = alive;
+            RespawnSeconds = respawn;
+            BuybackCost = buybackCost;
+            BuybackCooldown = buybackCd;
+            HealthPercent = hp;
+            ManaPercent = mp;
+        }
+
+        private static int ReadInt(JObject obj, string name, int fallback)
+        {
+            var token = obj[name];
+            return token != null && int.TryParse(token.ToString(), out var i) ? i : fallback;
+        }
+
+        private static bool ReadBool(JObject obj, string name, bool fallback)
+        {
+            var token = obj[name];
+            if (token == null)
+                return fallback;
+            try { return token.ToObject<bool>(); }
+            catch { return fallback; }
+        }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return $"[" +
+                $"ID: {ID}, " +
+                $"Name: {Name}, " +
+                $"Alive: {Alive}, " +
+                $"RespawnSeconds: {RespawnSeconds}, " +
+                $"BuybackCost: {BuybackCost}, " +
+                $"BuybackCooldown: {BuybackCooldown}, " +
+                $"HealthPercent: {HealthPercent}, " +
+                $"ManaPercent: {ManaPercent}" +
+                $"]";
+        }
+    }
+
+    /// <summary>
+    /// Abilities summary for a player in a spectator team roster, nested under
+    /// <c>player.teamN.playerM.abilities</c>. Exposes the ultimate (ability10-12)
+    /// readiness — the key team-fight signal for a spectator view.
+    /// </summary>
+    public class TeamAbilitiesDetails : Node
+    {
+        /// <summary>The ultimate ability unit name.</summary>
+        public readonly string UltimateName;
+        /// <summary>Ultimate remaining cooldown seconds (0 when ready).</summary>
+        public readonly int UltimateCooldown;
+        /// <summary>Whether the ultimate can currently be cast.</summary>
+        public readonly bool UltimateCanCast;
+
+        internal TeamAbilitiesDetails(JObject parsed_data = null) : base(parsed_data)
+        {
+            var ultimateName = string.Empty;
+            var ultimateCooldown = -1;
+            var ultimateCanCast = false;
+
+            if (parsed_data != null)
+            {
+                // Ultimates live in the 10/11/12 slots; prefer the first populated.
+                for (int i = 10; i <= 12; i++)
+                {
+                    if (parsed_data["ability" + i] is not JObject obj)
+                        continue;
+                    var name = obj["name"]?.ToString() ?? string.Empty;
+                    if (string.IsNullOrEmpty(name))
+                        continue;
+                    ultimateName = name;
+                    var cd = obj["cooldown"];
+                    ultimateCooldown = cd != null ? Convert.ToInt32(cd.ToString()) : -1;
+                    var can = obj["can_cast"];
+                    ultimateCanCast = can != null && can.ToObject<bool>();
+                    break;
+                }
+            }
+
+            UltimateName = ultimateName;
+            UltimateCooldown = ultimateCooldown;
+            UltimateCanCast = ultimateCanCast;
+        }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return $"[" +
+                $"UltimateName: {UltimateName}, " +
+                $"UltimateCooldown: {UltimateCooldown}, " +
+                $"UltimateCanCast: {UltimateCanCast}" +
+                $"]";
         }
     }
 }

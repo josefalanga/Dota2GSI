@@ -36,6 +36,26 @@ namespace Dota2GSI.Nodes
         public readonly int DireBonusTime;
 
         /// <summary>
+        /// Radiant picks, as hero unit names/slots (e.g. "npc_dota_hero_pudge").
+        /// </summary>
+        public readonly NodeList<string> RadiantPicks = new NodeList<string>();
+
+        /// <summary>
+        /// Radiant bans, as hero unit names/slots.
+        /// </summary>
+        public readonly NodeList<string> RadiantBans = new NodeList<string>();
+
+        /// <summary>
+        /// Dire picks, as hero unit names/slots.
+        /// </summary>
+        public readonly NodeList<string> DirePicks = new NodeList<string>();
+
+        /// <summary>
+        /// Dire bans, as hero unit names/slots.
+        /// </summary>
+        public readonly NodeList<string> DireBans = new NodeList<string>();
+
+        /// <summary>
         /// The team draft information.
         /// </summary>
         public readonly NodeMap<PlayerTeam, DraftDetails> Teams = new NodeMap<PlayerTeam, DraftDetails>();
@@ -44,11 +64,15 @@ namespace Dota2GSI.Nodes
 
         internal Draft(JObject parsed_data = null) : base(parsed_data)
         {
-            ActiveTeam = GetInt("activeteam");
+            ActiveTeam = GetInt("active_team");
             Pick = GetBool("pick");
-            ActiveTeamRemainingTime = GetInt("activeteam_time_remaining");
+            ActiveTeamRemainingTime = GetInt("activeteam_remaining_time");
             RadiantBonusTime = GetInt("radiant_bonus_time");
             DireBonusTime = GetInt("dire_bonus_time");
+            RadiantPicks = GetStringArray("radiant_picks");
+            RadiantBans = GetStringArray("radiant_bans");
+            DirePicks = GetStringArray("dire_picks");
+            DireBans = GetStringArray("dire_bans");
 
             GetMatchingObjects(parsed_data, _team_id_regex, (Match match, JObject obj) =>
             {
@@ -56,6 +80,19 @@ namespace Dota2GSI.Nodes
 
                 Teams.Add(team_id, new DraftDetails(obj));
             });
+        }
+
+        private NodeList<string> GetStringArray(string name)
+        {
+            var result = new NodeList<string>();
+            var arr = GetArray(name);
+            foreach (var token in arr)
+            {
+                var value = token.ToString();
+                if (!string.IsNullOrEmpty(value))
+                    result.Add(value);
+            }
+            return result;
         }
 
         /// <summary>
@@ -82,6 +119,10 @@ namespace Dota2GSI.Nodes
                 $"ActiveTeamRemainingTime: {ActiveTeamRemainingTime}, " +
                 $"RadiantBonusTime: {RadiantBonusTime}, " +
                 $"DireBonusTime: {DireBonusTime}, " +
+                $"RadiantPicks: {RadiantPicks}, " +
+                $"RadiantBans: {RadiantBans}, " +
+                $"DirePicks: {DirePicks}, " +
+                $"DireBans: {DireBans}, " +
                 $"Teams: {Teams}" +
                 $"]";
         }
@@ -100,6 +141,10 @@ namespace Dota2GSI.Nodes
                 ActiveTeamRemainingTime.Equals(other.ActiveTeamRemainingTime) &&
                 RadiantBonusTime.Equals(other.RadiantBonusTime) &&
                 DireBonusTime.Equals(other.DireBonusTime) &&
+                RadiantPicks.Equals(other.RadiantPicks) &&
+                RadiantBans.Equals(other.RadiantBans) &&
+                DirePicks.Equals(other.DirePicks) &&
+                DireBans.Equals(other.DireBans) &&
                 Teams.Equals(other.Teams);
         }
 
@@ -112,6 +157,10 @@ namespace Dota2GSI.Nodes
             hashCode = hashCode * -824566422 + ActiveTeamRemainingTime.GetHashCode();
             hashCode = hashCode * -824566422 + RadiantBonusTime.GetHashCode();
             hashCode = hashCode * -824566422 + DireBonusTime.GetHashCode();
+            hashCode = hashCode * -824566422 + RadiantPicks.GetHashCode();
+            hashCode = hashCode * -824566422 + RadiantBans.GetHashCode();
+            hashCode = hashCode * -824566422 + DirePicks.GetHashCode();
+            hashCode = hashCode * -824566422 + DireBans.GetHashCode();
             hashCode = hashCode * -824566422 + Teams.GetHashCode();
             return hashCode;
         }
