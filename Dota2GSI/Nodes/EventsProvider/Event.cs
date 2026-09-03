@@ -93,10 +93,19 @@ namespace Dota2GSI.Nodes.EventsProvider
         /// </summary>
         public readonly int BountyValue;
 
-        /// <summary>
+/// <summary>
         /// The amount of team gold after the event.
         /// </summary>
         public readonly int TeamGold;
+
+        /// <summary>
+        /// The nested event payload. Dota serializes most events as a
+        /// <c>generic_event</c> with the real type and ids inside the
+        /// <c>data</c> string, so the typed fields above are only set for the
+        /// handful of legacy event types. <see cref="EventData"/> exposes the
+        /// nested payload for everything else.
+        /// </summary>
+        public readonly EventData Data;
 
         internal Event(JObject parsed_data = null) : base(parsed_data)
         {
@@ -131,9 +140,11 @@ namespace Dota2GSI.Nodes.EventsProvider
                     BountyValue = GetInt("bounty_value");
                     TeamGold = GetInt("team_gold");
                     break;
-                default:
+default:
                     break;
             }
+
+            Data = new EventData(GetString("data"));
         }
 
         /// <inheritdoc/>
@@ -186,9 +197,74 @@ namespace Dota2GSI.Nodes.EventsProvider
             hashCode = hashCode * -320607063 + WasSnatched.GetHashCode();
             hashCode = hashCode * -320607063 + TipReceiverPlayerID.GetHashCode();
             hashCode = hashCode * -320607063 + TipAmount.GetHashCode();
-            hashCode = hashCode * -320607063 + BountyValue.GetHashCode();
+hashCode = hashCode * -320607063 + BountyValue.GetHashCode();
             hashCode = hashCode * -320607063 + TeamGold.GetHashCode();
             return hashCode;
+        }
+    }
+
+    /// <summary>
+    /// The nested event payload carried in the <c>data</c> string for the
+    /// generic event type. Dota puts the real event type and the involved
+    /// player ids here rather than as top-level fields.
+    /// </summary>
+    public class EventData
+    {
+        /// <summary>The real event type (e.g. "dota_player_kill", "hero_died").</summary>
+        public readonly string Type;
+        /// <summary>First involved player id (attacker for kills).</summary>
+        public readonly int PlayerID1;
+        /// <summary>Second involved player id (victim for kills).</summary>
+        public readonly int PlayerID2;
+        /// <summary>Event-specific primary value.</summary>
+        public readonly int Value;
+        /// <summary>Event-specific secondary value.</summary>
+        public readonly int Value2;
+
+        internal EventData(string json)
+        {
+            Type = string.Empty;
+            PlayerID1 = -1;
+            PlayerID2 = -1;
+            Value = 0;
+            Value2 = 0;
+
+            if (string.IsNullOrEmpty(json))
+                return;
+
+            try
+            {
+                var obj = JObject.Parse(json);
+                Type = obj["type"]?.ToString() ?? string.Empty;
+                PlayerID1 = ReadInt(obj, "playerid1", -1);
+                PlayerID2 = ReadInt(obj, "playerid2", -1);
+                Value = ReadInt(obj, "value", 0);
+                Value2 = ReadInt(obj, "value2", 0);
+            }
+            catch
+            {
+                // Malformed/empty data payload — leave defaults.
+            }
+        }
+
+        private static int ReadInt(JObject obj, string name, int fallback)
+        {
+            var token = obj[name];
+            if (token == null)
+                return fallback;
+            return int.TryParse(token.ToString(), out var i) ? i : fallback;
+        }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return $"[" +
+                $"Type: {Type}, " +
+                $"PlayerID1: {PlayerID1}, " +
+                $"PlayerID2: {PlayerID2}, " +
+                $"Value: {Value}, " +
+                $"Value2: {Value2}" +
+                $"]";
         }
     }
 }
