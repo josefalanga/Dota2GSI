@@ -38,7 +38,7 @@ namespace Dota2GSI.Nodes
                     Teams.Add(team_id, new NodeMap<int, ItemDetails>());
                 }
 
-                GetMatchingObjects(parsed_data, _player_id_regex, (Match sub_match, JObject sub_obj) =>
+                GetMatchingObjects(obj, _player_id_regex, (Match sub_match, JObject sub_obj) =>
                 {
                     var player_index = Convert.ToInt32(sub_match.Groups[1].Value);
                     var item_details = new ItemDetails(sub_obj);

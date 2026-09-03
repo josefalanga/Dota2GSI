@@ -201,6 +201,16 @@ namespace Dota2GSI.Nodes.PlayerProvider
         public readonly int GoldSpentOnBuybacks;
 
         /// <summary>
+        /// The player's hero state (only present in spectator team rosters).
+        /// </summary>
+        public readonly TeamHeroDetails Hero;
+
+        /// <summary>
+        /// The player's abilities (only present in spectator team rosters).
+        /// </summary>
+        public readonly TeamAbilitiesDetails Abilities;
+
+        /// <summary>
         /// The amount of wards the player has purchased. (SPECTATOR ONLY)
         /// </summary>
         public readonly int WardsPurchased;
@@ -275,6 +285,9 @@ namespace Dota2GSI.Nodes.PlayerProvider
             ItemGoldSpent = GetInt("item_gold_spent");
             GoldLostToDeath = GetInt("gold_lost_to_death");
             GoldSpentOnBuybacks = GetInt("gold_spent_on_buybacks");
+
+            Hero = new TeamHeroDetails(GetJObject("hero"));
+            Abilities = new TeamAbilitiesDetails(GetJObject("abilities"));
         }
 
         /// <inheritdoc/>
@@ -417,6 +430,113 @@ namespace Dota2GSI.Nodes.PlayerProvider
             hashCode = hashCode * -112730515 + RunesActivated.GetHashCode();
             hashCode = hashCode * -112730515 + CampsStacked.GetHashCode();
             return hashCode;
+        }
+    }
+
+    /// <summary>
+    /// Hero summary for a player in a spectator team roster, nested under
+    /// <c>player.teamN.playerM.hero</c>. Includes liveness and buyback state
+    /// that the top-level local-player hero node does not provide.
+    /// </summary>
+    public class TeamHeroDetails : Node
+    {
+        /// <summary>Hero id (0 when not picked yet).</summary>
+        public readonly int ID;
+        /// <summary>Hero unit name (e.g. "npc_dota_hero_antimage").</summary>
+        public readonly string Name;
+        /// <summary>Whether the hero is currently alive.</summary>
+        public readonly bool Alive;
+        /// <summary>Seconds until the hero respawns.</summary>
+        public readonly int RespawnSeconds;
+        /// <summary>Current buyback cost in gold.</summary>
+        public readonly int BuybackCost;
+        /// <summary>Seconds of remaining buyback cooldown.</summary>
+        public readonly int BuybackCooldown;
+        /// <summary>Current health as a percent (0..100).</summary>
+        public readonly int HealthPercent;
+        /// <summary>Current mana as a percent (0..100).</summary>
+        public readonly int ManaPercent;
+
+        internal TeamHeroDetails(JObject parsed_data = null) : base(parsed_data)
+        {
+            ID = GetInt("id");
+            Name = GetString("name");
+            Alive = GetBool("alive");
+            RespawnSeconds = GetInt("respawn_seconds");
+            BuybackCost = GetInt("buyback_cost");
+            BuybackCooldown = GetInt("buyback_cooldown");
+            HealthPercent = GetInt("health_percent");
+            ManaPercent = GetInt("mana_percent");
+        }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return $"[" +
+                $"ID: {ID}, " +
+                $"Name: {Name}, " +
+                $"Alive: {Alive}, " +
+                $"RespawnSeconds: {RespawnSeconds}, " +
+                $"BuybackCost: {BuybackCost}, " +
+                $"BuybackCooldown: {BuybackCooldown}, " +
+                $"HealthPercent: {HealthPercent}, " +
+                $"ManaPercent: {ManaPercent}" +
+                $"]";
+        }
+    }
+
+    /// <summary>
+    /// Abilities summary for a player in a spectator team roster, nested under
+    /// <c>player.teamN.playerM.abilities</c>. Exposes the ultimate (ability10-12)
+    /// readiness — the key team-fight signal for a spectator view.
+    /// </summary>
+    public class TeamAbilitiesDetails : Node
+    {
+        /// <summary>The ultimate ability unit name.</summary>
+        public readonly string UltimateName;
+        /// <summary>Ultimate remaining cooldown seconds (0 when ready).</summary>
+        public readonly int UltimateCooldown;
+        /// <summary>Whether the ultimate can currently be cast.</summary>
+        public readonly bool UltimateCanCast;
+
+        internal TeamAbilitiesDetails(JObject parsed_data = null) : base(parsed_data)
+        {
+            var ultimateName = string.Empty;
+            var ultimateCooldown = -1;
+            var ultimateCanCast = false;
+
+            if (parsed_data != null)
+            {
+                // Ultimates live in the 10/11/12 slots; prefer the first populated.
+                for (int i = 10; i <= 12; i++)
+                {
+                    if (parsed_data["ability" + i] is not JObject obj)
+                        continue;
+                    var name = obj["name"]?.ToString() ?? string.Empty;
+                    if (string.IsNullOrEmpty(name))
+                        continue;
+                    ultimateName = name;
+                    var cd = obj["cooldown"];
+                    ultimateCooldown = cd != null ? Convert.ToInt32(cd.ToString()) : -1;
+                    var can = obj["can_cast"];
+                    ultimateCanCast = can != null && can.ToObject<bool>();
+                    break;
+                }
+            }
+
+            UltimateName = ultimateName;
+            UltimateCooldown = ultimateCooldown;
+            UltimateCanCast = ultimateCanCast;
+        }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return $"[" +
+                $"UltimateName: {UltimateName}, " +
+                $"UltimateCooldown: {UltimateCooldown}, " +
+                $"UltimateCanCast: {UltimateCanCast}" +
+                $"]";
         }
     }
 }
