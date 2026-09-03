@@ -29,7 +29,7 @@ namespace Dota2GSI.Nodes.Helpers
         /// <summary>
         /// This team's neutral items.
         /// </summary>
-        public readonly TeamNeutralItems NeutralItems = new TeamNeutralItems();
+        public readonly NodeMap<int, NeutralPlayer> NeutralItems = new NodeMap<int, NeutralPlayer>();
 
         /// <summary>
         /// This team's buildings.

@@ -32,10 +32,15 @@ namespace Dota2GSI.Nodes.AbilitiesProvider
         /// </summary>
         public readonly bool IsActive;
 
-        /// <summary>
+/// <summary>
         /// Ability cooldown in seconds.
         /// </summary>
         public readonly int Cooldown;
+
+        /// <summary>
+        /// Ability maximum cooldown in seconds.
+        /// </summary>
+        public readonly int MaxCooldown;
 
         /// <summary>
         /// A boolean representing whether the ability is an ultimate.
@@ -65,6 +70,7 @@ namespace Dota2GSI.Nodes.AbilitiesProvider
             IsPassive = GetBool("passive");
             IsActive = GetBool("ability_active");
             Cooldown = GetInt("cooldown");
+            MaxCooldown = GetInt("max_cooldown");
             IsUltimate = GetBool("ultimate");
             Charges = GetInt("charges");
             MaxCharges = GetInt("max_charges");
@@ -81,6 +87,7 @@ namespace Dota2GSI.Nodes.AbilitiesProvider
                 $"IsPassive: {IsPassive}, " +
                 $"IsActive: {IsActive}, " +
                 $"Cooldown: {Cooldown}, " +
+                $"MaxCooldown: {MaxCooldown}, " +
                 $"IsUltimate: {IsUltimate}, " +
                 $"Charges: {Charges}, " +
                 $"MaxCharges: {MaxCharges}, " +
@@ -103,6 +110,7 @@ namespace Dota2GSI.Nodes.AbilitiesProvider
                 IsPassive.Equals(other.IsPassive) &&
                 IsActive.Equals(other.IsActive) &&
                 Cooldown.Equals(other.Cooldown) &&
+                MaxCooldown.Equals(other.MaxCooldown) &&
                 IsUltimate.Equals(other.IsUltimate) &&
                 Charges.Equals(other.Charges) &&
                 MaxCharges.Equals(other.MaxCharges) &&
@@ -119,6 +127,7 @@ namespace Dota2GSI.Nodes.AbilitiesProvider
             hashCode = hashCode * -84013849 + IsPassive.GetHashCode();
             hashCode = hashCode * -84013849 + IsActive.GetHashCode();
             hashCode = hashCode * -84013849 + Cooldown.GetHashCode();
+            hashCode = hashCode * -84013849 + MaxCooldown.GetHashCode();
             hashCode = hashCode * -84013849 + IsUltimate.GetHashCode();
             hashCode = hashCode * -84013849 + Charges.GetHashCode();
             hashCode = hashCode * -84013849 + MaxCharges.GetHashCode();
