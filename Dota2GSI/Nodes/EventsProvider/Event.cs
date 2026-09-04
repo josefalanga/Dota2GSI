@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using System;
 
 namespace Dota2GSI.Nodes.EventsProvider
 {
@@ -51,6 +52,71 @@ namespace Dota2GSI.Nodes.EventsProvider
         /// A generic event carrying a nested <c>data</c> payload.
         /// </summary>
         Generic_event
+    }
+
+    /// <summary>
+    /// Known real event types carried inside a <see cref="EventType.Generic_event"/>
+    /// <c>data</c> payload. Dota emits these as <c>CHAT_MESSAGE_*</c> strings; the
+    /// numeric fields on <see cref="EventData"/> mean different things per type.
+    /// </summary>
+    public enum GenericEventType
+    {
+        /// <summary>Not one of the known generic event types.</summary>
+        Unknown = -1,
+
+        /// <summary>A hero was banned during draft. <see cref="EventData.Value"/> is the banned hero id.</summary>
+        Hero_banned,
+
+        /// <summary>Two players collided on a blind pick and the hero was unpicked and banned. <see cref="EventData.Value"/> is the hero id; <see cref="EventData.PlayerID1"/> and <see cref="EventData.PlayerID2"/> are the colliding players.</summary>
+        Hero_choice_invalid,
+
+        /// <summary>A hero was killed. <see cref="EventData.PlayerID1"/> is the killer, <see cref="EventData.PlayerID2"/> the victim.</summary>
+        Hero_kill,
+
+        /// <summary>A kill streak message was broadcast.</summary>
+        Streak_kill,
+
+        /// <summary>A player bought an item. <see cref="EventData.Value"/> is the item id, <see cref="EventData.PlayerID1"/> the buyer.</summary>
+        Item_purchase,
+
+        /// <summary>A tower fell. <see cref="EventData.Value"/> is the team that lost it.</summary>
+        Tower_kill,
+
+        /// <summary>A barracks fell.</summary>
+        Barracks_kill,
+
+        /// <summary>A team used glyph of fortification. <see cref="EventData.PlayerID1"/> is the team.</summary>
+        Glyph_used,
+
+        /// <summary>A team used Scan. <see cref="EventData.Value"/> is the team.</summary>
+        Scan_used,
+
+        /// <summary>A courier was killed.</summary>
+        Courier_lost,
+
+        /// <summary>A courier respawned. <see cref="EventData.PlayerID1"/> is the owning team.</summary>
+        Courier_respawned,
+
+        /// <summary>A sentry ward was destroyed. <see cref="EventData.PlayerID1"/> is the killer.</summary>
+        Sentry_ward_killed,
+
+        /// <summary>A player bought back. <see cref="EventData.PlayerID1"/> is the player.</summary>
+        Buyback,
+
+        /// <summary>An item was placed in the neutral-item bag. <see cref="EventData.PlayerID1"/> is the player.</summary>
+        Inthebag,
+
+        /// <summary>An observer ward was destroyed. <see cref="EventData.PlayerID1"/> is the killer.</summary>
+        Observer_ward_killed,
+
+        /// <summary>First blood was drawn. <see cref="EventData.PlayerID1"/> is the killer, <see cref="EventData.PlayerID2"/> the victim.</summary>
+        Firstblood,
+
+        /// <summary>Super creeps were activated. <see cref="EventData.PlayerID1"/> is the team.</summary>
+        Super_creeps,
+
+        /// <summary>New-player reminder surfaced for a player.</summary>
+        New_player_reminder
     }
 
     /// <summary>
@@ -253,8 +319,10 @@ hashCode = hashCode * -320607063 + BountyValue.GetHashCode();
     /// </summary>
     public class EventData
     {
-        /// <summary>The real event type (e.g. "dota_player_kill", "hero_died").</summary>
+        /// <summary>The raw event type string as Dota sent it (e.g. "CHAT_MESSAGE_HERO_KILL").</summary>
         public readonly string Type;
+        /// <summary><see cref="Type"/> parsed into the known generic event types; <see cref="GenericEventType.Unknown"/> for anything else.</summary>
+        public readonly GenericEventType GenericType;
         /// <summary>First involved player id (attacker for kills).</summary>
         public readonly int PlayerID1;
         /// <summary>Second involved player id (victim for kills).</summary>
@@ -275,10 +343,21 @@ hashCode = hashCode * -320607063 + BountyValue.GetHashCode();
         public readonly int Value3;
         /// <summary>Event-specific time.</summary>
         public readonly double Time;
+        /// <summary>Hero id for <see cref="GenericEventType.Hero_banned"/> / <see cref="GenericEventType.Hero_choice_invalid"/>; -1 otherwise.</summary>
+        public readonly int HeroId;
+        /// <summary>Item id for <see cref="GenericEventType.Item_purchase"/>; 0 otherwise.</summary>
+        public readonly int ItemId;
+        /// <summary>Killer's player id for kill events (<see cref="GenericEventType.Hero_kill"/> / <see cref="GenericEventType.Firstblood"/>); -1 otherwise.</summary>
+        public readonly int KillerPlayerId;
+        /// <summary>Victim's player id for kill events; -1 otherwise.</summary>
+        public readonly int VictimPlayerId;
+        /// <summary>Involved team for tower/barracks/scan/glyph/super-creep/courier events; <see cref="PlayerTeam.Undefined"/> otherwise.</summary>
+        public readonly PlayerTeam Team;
 
         internal EventData(string json)
         {
             Type = string.Empty;
+            GenericType = GenericEventType.Unknown;
             PlayerID1 = -1;
             PlayerID2 = -1;
             PlayerID3 = -1;
@@ -289,6 +368,11 @@ hashCode = hashCode * -320607063 + BountyValue.GetHashCode();
             Value2 = 0;
             Value3 = 0;
             Time = 0.0;
+            HeroId = -1;
+            ItemId = 0;
+            KillerPlayerId = -1;
+            VictimPlayerId = -1;
+            Team = PlayerTeam.Undefined;
 
             if (string.IsNullOrEmpty(json))
                 return;
@@ -297,6 +381,7 @@ hashCode = hashCode * -320607063 + BountyValue.GetHashCode();
             {
                 var obj = JObject.Parse(json);
                 Type = obj["type"]?.ToString() ?? string.Empty;
+                GenericType = ParseGenericEventType(Type);
                 PlayerID1 = ReadInt(obj, "playerid1", -1);
                 PlayerID2 = ReadInt(obj, "playerid2", -1);
                 PlayerID3 = ReadInt(obj, "playerid3", -1);
@@ -312,6 +397,39 @@ hashCode = hashCode * -320607063 + BountyValue.GetHashCode();
             {
                 // Malformed/empty data payload — leave defaults.
             }
+
+            switch (GenericType)
+            {
+                case GenericEventType.Hero_banned:
+                case GenericEventType.Hero_choice_invalid:
+                    HeroId = Value;
+                    break;
+                case GenericEventType.Item_purchase:
+                    ItemId = Value;
+                    break;
+                case GenericEventType.Hero_kill:
+                case GenericEventType.Firstblood:
+                    KillerPlayerId = PlayerID1;
+                    VictimPlayerId = PlayerID2;
+                    break;
+                case GenericEventType.Tower_kill:
+                case GenericEventType.Barracks_kill:
+                case GenericEventType.Scan_used:
+                    Team = ToTeam(Value);
+                    break;
+                case GenericEventType.Glyph_used:
+                case GenericEventType.Super_creeps:
+                case GenericEventType.Courier_respawned:
+                    Team = ToTeam(PlayerID1);
+                    break;
+            }
+        }
+
+        private static PlayerTeam ToTeam(int value)
+        {
+            return value == (int)PlayerTeam.Radiant || value == (int)PlayerTeam.Dire
+                ? (PlayerTeam)value
+                : PlayerTeam.Undefined;
         }
 
         private static int ReadInt(JObject obj, string name, int fallback)
@@ -320,6 +438,15 @@ hashCode = hashCode * -320607063 + BountyValue.GetHashCode();
             if (token == null)
                 return fallback;
             return int.TryParse(token.ToString(), out var i) ? i : fallback;
+        }
+
+        private static GenericEventType ParseGenericEventType(string type)
+        {
+            if (string.IsNullOrEmpty(type) || !type.StartsWith("CHAT_MESSAGE_", StringComparison.Ordinal))
+                return GenericEventType.Unknown;
+
+            var name = type.Substring("CHAT_MESSAGE_".Length);
+            return Enum.TryParse(name, true, out GenericEventType parsed) ? parsed : GenericEventType.Unknown;
         }
 
         private static double ReadDouble(JObject obj, string name, double fallback)
@@ -335,6 +462,7 @@ hashCode = hashCode * -320607063 + BountyValue.GetHashCode();
         {
             return $"[" +
                 $"Type: {Type}, " +
+                $"GenericType: {GenericType}, " +
                 $"PlayerID1: {PlayerID1}, " +
                 $"PlayerID2: {PlayerID2}, " +
                 $"PlayerID3: {PlayerID3}, " +
@@ -344,7 +472,12 @@ hashCode = hashCode * -320607063 + BountyValue.GetHashCode();
                 $"Value: {Value}, " +
                 $"Value2: {Value2}, " +
                 $"Value3: {Value3}, " +
-                $"Time: {Time}" +
+                $"Time: {Time}, " +
+                $"HeroId: {HeroId}, " +
+                $"ItemId: {ItemId}, " +
+                $"KillerPlayerId: {KillerPlayerId}, " +
+                $"VictimPlayerId: {VictimPlayerId}, " +
+                $"Team: {Team}" +
                 $"]";
         }
 
