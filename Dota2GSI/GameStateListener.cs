@@ -248,11 +248,26 @@ namespace Dota2GSI
                     response.Close();
                 }
 
-                CurrentGameState = new GameState(JObject.Parse(json_data));
+                JObject parsed_data;
+                try
+                {
+                    parsed_data = JObject.Parse(json_data);
+                }
+                catch (Exception)
+                {
+                    // Malformed top-level JSON; ignore this tick and keep listening.
+                    return;
+                }
+
+                CurrentGameState = new GameState(parsed_data);
             }
             catch (ObjectDisposedException)
             {
                 // Intentionally left blank, when the Listener is closed.
+            }
+            catch (Exception)
+            {
+                // Never let an exception escape the tick handler.
             }
         }
 
