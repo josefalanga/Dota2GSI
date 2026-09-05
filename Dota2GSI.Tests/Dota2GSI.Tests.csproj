@@ -6,7 +6,6 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <IsPackable>false</IsPackable>
     <RootNamespace>Dota2GSI.Tests</RootNamespace>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,10 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../Dota2GSI/Dota2GSI.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="**/*.cs" />
   </ItemGroup>
 
 </Project>
