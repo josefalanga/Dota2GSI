@@ -78,6 +78,8 @@ namespace Dota2GSI
         /// Returns whether or not the listener is running.
         /// </summary>
         public bool Running { get { return _is_running; } }
+        // Disposal tracking for idempotent Dispose().
+        private readonly bool _disposed = false;
 
         /// <summary>
         /// Event for handing a newly received game state.
@@ -211,6 +213,7 @@ namespace Dota2GSI
         public void Stop()
         {
             _is_running = false;
+            try { _http_listener.Stop(); } catch { }
         }
 
         private void Run()
@@ -218,7 +221,10 @@ namespace Dota2GSI
             while (_is_running)
             {
                 _http_listener.BeginGetContext(ReceiveGameState, _http_listener);
-                _wait_for_connection.WaitOne();
+                if (!_wait_for_connection.WaitOne(100))
+                {
+                    continue;
+                }
                 _wait_for_connection.Reset();
             }
             _http_listener.Stop();
@@ -268,9 +274,11 @@ namespace Dota2GSI
         /// </summary>
         public void Dispose()
         {
+            if (_disposed) return;
+            _disposed = true;
             Stop();
             _wait_for_connection.Dispose();
-            _http_listener.Close();
+            try { _http_listener.Close(); } catch { }
         }
     }
 }
