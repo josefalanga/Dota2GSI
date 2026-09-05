@@ -87,6 +87,11 @@ namespace Dota2GSI
         {
             string eventTypeName = typeof(MessageType).Name;
             string playerIds = ExtractPlayerIds(message);
+            // If no discriminating player/killer/entity ids, skip dedup entirely
+            if (string.IsNullOrEmpty(playerIds))
+            {
+                return null;
+            }
             return $"{eventTypeName}|{playerIds}";
         }
 
@@ -175,17 +180,21 @@ namespace Dota2GSI
             {
                 // --- Dedup check ---
                 string dedupKey = BuildDedupKey(message);
-                if (_recentKeys.Contains(dedupKey))
+                // If null (event has no discriminating ids), always dispatch
+                if (dedupKey != null && _recentKeys.Contains(dedupKey))
                 {
                     // Same key seen within window — skip dispatch to avoid double-fire
                     return;
                 }
-                _recentKeys.Add(dedupKey);
-                _keyQueue.Enqueue(dedupKey);
-                if (_keyQueue.Count > DedupWindowSize)
+                if (dedupKey != null)
                 {
-                    string oldKey = _keyQueue.Dequeue();
-                    _recentKeys.Remove(oldKey);
+                    _recentKeys.Add(dedupKey);
+                    _keyQueue.Enqueue(dedupKey);
+                    if (_keyQueue.Count > DedupWindowSize)
+                    {
+                        string oldKey = _keyQueue.Dequeue();
+                        _recentKeys.Remove(oldKey);
+                    }
                 }
                 // ----------------
 
