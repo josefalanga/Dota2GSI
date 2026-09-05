@@ -15,6 +15,12 @@ namespace Dota2GSI
     public delegate void NewGameStateHandler(GameState gamestate);
 
     /// <summary>
+    /// Delegate for handing the raw, unparsed JSON payload of each received game state.
+    /// </summary>
+    /// <param name="raw_json">The raw JSON string as sent by Dota 2.</param>
+    public delegate void NewRawGameStateHandler(string raw_json);
+
+    /// <summary>
     /// Delegate for handing game events.
     /// </summary>
     /// <param name="game_event">The new game event.</param>
@@ -83,6 +89,11 @@ namespace Dota2GSI
         /// Event for handing a newly received game state.
         /// </summary>
         public event NewGameStateHandler NewGameState = delegate { };
+
+        /// <summary>
+        /// Event for handing the raw, unparsed JSON payload of a newly received game state.
+        /// </summary>
+        public event NewRawGameStateHandler NewRawGameState = delegate { };
 
         private readonly object gamestate_lock = new object();
 
@@ -247,6 +258,8 @@ namespace Dota2GSI
                     response.StatusDescription = "OK";
                     response.Close();
                 }
+
+                NewRawGameState(json_data);
 
                 CurrentGameState = new GameState(JObject.Parse(json_data));
             }
