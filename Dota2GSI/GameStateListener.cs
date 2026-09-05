@@ -60,6 +60,7 @@ namespace Dota2GSI
                     _previous_game_state = _current_game_state;
                     _current_game_state = value;
                     RaiseOnNewGameState(ref _current_game_state);
+<<<<<<< HEAD
                     if (value.Added != null && value.Added.HasValues)
                     {
                         foreach (var prop in value.Added.Properties())
@@ -70,6 +71,8 @@ namespace Dota2GSI
                             }
                         }
                     }
+=======
+>>>>>>> fix/listener-dispose
                 }
             }
         }
@@ -89,18 +92,25 @@ namespace Dota2GSI
         /// </summary>
         public bool Running { get { return _is_running; } }
         // Disposal tracking for idempotent Dispose().
-        private readonly bool _disposed = false;
+<<<<<<< HEAD
+        private bool _disposed = false;
+=======
+        private bool _disposed = false;
+>>>>>>> fix/listener-dispose
 
         /// <summary>
         /// Event for handing a newly received game state.
         /// </summary>
         public event NewGameStateHandler NewGameState = delegate { };
 
+<<<<<<< HEAD
         /// <summary>
         /// Event for handing per-leaf changes from the Added block.
         /// </summary>
         public event Action<string, JObject> LeafChanged = delegate { };
 
+=======
+>>>>>>> fix/listener-dispose
         private readonly object gamestate_lock = new object();
 
         private bool _is_running = false;
@@ -112,7 +122,11 @@ namespace Dota2GSI
         private GameState _current_game_state = new GameState();
 
         // Dispatcher for game events.
+<<<<<<< HEAD
         private EventDispatcher<DotaGameEvent> _dispatcher = new EventDispatcher<DotaGameEvent>();
+=======
+        private static EventDispatcher<DotaGameEvent> _dispatcher = new EventDispatcher<DotaGameEvent>();
+>>>>>>> fix/listener-dispose
 
         // Game State handlers.
         private AbilitiesHandler _abilities_handler = new AbilitiesHandler(ref _dispatcher);
@@ -269,6 +283,7 @@ namespace Dota2GSI
                     response.Close();
                 }
 
+<<<<<<< HEAD
                 JObject parsed_data;
                 try
                 {
@@ -285,6 +300,9 @@ namespace Dota2GSI
             catch (Exception)
             {
                 // Never let an exception escape the tick handler.
+=======
+                CurrentGameState = new GameState(JObject.Parse(json_data));
+>>>>>>> fix/listener-dispose
             }
             catch (ObjectDisposedException)
             {
@@ -299,11 +317,14 @@ namespace Dota2GSI
             _game_state_handler.OnNewGameState(game_state);
         }
 
+<<<<<<< HEAD
         private void RaiseOnLeafChanged(string leafName, JObject leafValue)
         {
             LeafChanged?.Invoke(leafName, leafValue);
         }
 
+=======
+>>>>>>> fix/listener-dispose
         /// <summary>
         /// Stops the listener and frees up resources.
         /// </summary>
