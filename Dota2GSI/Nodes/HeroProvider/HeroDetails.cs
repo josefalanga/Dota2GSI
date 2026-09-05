@@ -1,5 +1,6 @@
 using Dota2GSI.Nodes.Helpers;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Linq;
 
 namespace Dota2GSI.Nodes.HeroProvider
@@ -33,6 +34,7 @@ namespace Dota2GSI.Nodes.HeroProvider
     /// <summary>
     /// The hero state.
     /// </summary>
+    [Flags]
     public enum HeroState
     {
         /// <summary>
@@ -43,42 +45,42 @@ namespace Dota2GSI.Nodes.HeroProvider
         /// <summary>
         /// Hero is silenced.
         /// </summary>
-        Silenced,
+        Silenced = 1,
 
         /// <summary>
         /// Hero is stunned.
         /// </summary>
-        Stunned,
+        Stunned = 2,
 
         /// <summary>
         /// Hero is disarmed.
         /// </summary>
-        Disarmed,
+        Disarmed = 4,
 
         /// <summary>
         /// Hero is magic immune.
         /// </summary>
-        MagicImmune,
+        MagicImmune = 8,
 
         /// <summary>
         /// Hero is hexed.
         /// </summary>
-        Hexed,
+        Hexed = 16,
 
         /// <summary>
         /// Hero is broken.
         /// </summary>
-        Broken,
+        Broken = 32,
 
         /// <summary>
         /// Hero is smoked.
         /// </summary>
-        Smoked,
+        Smoked = 64,
 
         /// <summary>
         /// Hero is debuffed.
         /// </summary>
-        Debuffed
+        Debuffed = 128
     }
 
     /// <summary>
@@ -236,6 +238,16 @@ namespace Dota2GSI.Nodes.HeroProvider
         /// </summary>
         public readonly int AttributesLevel;
 
+        /// <summary>
+        /// The hero's selected facet ID.
+        /// </summary>
+        public readonly int Facet;
+
+        /// <summary>
+        /// The hero's permanent buffs. Key is the buff name, value is the stack count.
+        /// </summary>
+        public readonly NodeMap<string, int> PermanentBuffs = new NodeMap<string, int>();
+
         internal HeroDetails(JObject parsed_data = null) : base(parsed_data)
         {
             Location = new Vector2D(GetInt("xpos"), GetInt("ypos"));
@@ -262,42 +274,42 @@ namespace Dota2GSI.Nodes.HeroProvider
 
             if (GetBool("silenced"))
             {
-                HeroState &= HeroState.Silenced;
+                HeroState |= HeroState.Silenced;
             }
 
             if (GetBool("stunned"))
             {
-                HeroState &= HeroState.Stunned;
+                HeroState |= HeroState.Stunned;
             }
 
             if (GetBool("disarmed"))
             {
-                HeroState &= HeroState.Disarmed;
+                HeroState |= HeroState.Disarmed;
             }
 
             if (GetBool("magicimmune"))
             {
-                HeroState &= HeroState.MagicImmune;
+                HeroState |= HeroState.MagicImmune;
             }
 
             if (GetBool("hexed"))
             {
-                HeroState &= HeroState.Hexed;
+                HeroState |= HeroState.Hexed;
             }
 
             if (GetBool("break"))
             {
-                HeroState &= HeroState.Broken;
+                HeroState |= HeroState.Broken;
             }
 
             if (GetBool("smoked"))
             {
-                HeroState &= HeroState.Smoked;
+                HeroState |= HeroState.Smoked;
             }
 
             if (GetBool("has_debuff"))
             {
-                HeroState &= HeroState.Debuffed;
+                HeroState |= HeroState.Debuffed;
             }
 
             TalentTree = new TalentTreeSpec[4];
@@ -329,6 +341,20 @@ namespace Dota2GSI.Nodes.HeroProvider
             }
 
             AttributesLevel = GetInt("attributes_level");
+            Facet = GetInt("facet");
+
+            var permanent_buffs = GetJObject("permanent_buffs");
+            if (permanent_buffs != null)
+            {
+                foreach (var property in permanent_buffs.Properties())
+                {
+                    int stack_count;
+                    if (int.TryParse(property.Value.ToString(), out stack_count))
+                    {
+                        PermanentBuffs.Add(property.Name, stack_count);
+                    }
+                }
+            }
         }
 
         /// <inheritdoc/>
@@ -356,7 +382,9 @@ namespace Dota2GSI.Nodes.HeroProvider
                 $"HasAghanimsShardUpgrade: {HasAghanimsShardUpgrade}, " +
                 $"SelectedUnit: {SelectedUnit}, " +
                 $"TalentTree: {TalentTree}, " +
-                $"AttributesLevel: {AttributesLevel}" +
+                $"AttributesLevel: {AttributesLevel}, " +
+                $"Facet: {Facet}, " +
+                $"PermanentBuffs: {PermanentBuffs}" +
                 $"]";
         }
 
@@ -384,12 +412,15 @@ namespace Dota2GSI.Nodes.HeroProvider
                 Mana.Equals(other.Mana) &&
                 MaxMana.Equals(other.MaxMana) &&
                 ManaPercent.Equals(other.ManaPercent) &&
+                HeroState.Equals(other.HeroState) &&
                 IsMuted.Equals(other.IsMuted) &&
                 HasAghanimsScepterUpgrade.Equals(other.HasAghanimsScepterUpgrade) &&
                 HasAghanimsShardUpgrade.Equals(other.HasAghanimsShardUpgrade) &&
                 SelectedUnit.Equals(other.SelectedUnit) &&
                 Enumerable.SequenceEqual(TalentTree, other.TalentTree) &&
-                AttributesLevel.Equals(other.AttributesLevel);
+                AttributesLevel.Equals(other.AttributesLevel) &&
+                Facet.Equals(other.Facet) &&
+                PermanentBuffs.Equals(other.PermanentBuffs);
         }
 
         /// <inheritdoc/>
@@ -411,12 +442,15 @@ namespace Dota2GSI.Nodes.HeroProvider
             hashCode = hashCode * -287957234 + Mana.GetHashCode();
             hashCode = hashCode * -287957234 + MaxMana.GetHashCode();
             hashCode = hashCode * -287957234 + ManaPercent.GetHashCode();
+            hashCode = hashCode * -287957234 + HeroState.GetHashCode();
             hashCode = hashCode * -287957234 + IsMuted.GetHashCode();
             hashCode = hashCode * -287957234 + HasAghanimsScepterUpgrade.GetHashCode();
             hashCode = hashCode * -287957234 + HasAghanimsShardUpgrade.GetHashCode();
             hashCode = hashCode * -287957234 + SelectedUnit.GetHashCode();
             hashCode = hashCode * -287957234 + TalentTree.GetHashCode();
             hashCode = hashCode * -287957234 + AttributesLevel.GetHashCode();
+            hashCode = hashCode * -287957234 + Facet.GetHashCode();
+            hashCode = hashCode * -287957234 + PermanentBuffs.GetHashCode();
             return hashCode;
         }
     }

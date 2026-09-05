@@ -98,10 +98,15 @@ namespace Dota2GSI.Nodes.ItemsProvider
         /// </summary>
         public readonly bool CanCast;
 
-        /// <summary>
+/// <summary>
         /// Item's cooldown.
         /// </summary>
         public readonly int Cooldown;
+
+        /// <summary>
+        /// Item's maximum cooldown.
+        /// </summary>
+        public readonly int MaxCooldown;
 
         /// <summary>
         /// A boolean representing whether this item is passive.
@@ -142,6 +147,7 @@ namespace Dota2GSI.Nodes.ItemsProvider
             ContainsRune = GetEnum<Rune>("contains_rune");
             CanCast = GetBool("can_cast");
             Cooldown = GetInt("cooldown");
+            MaxCooldown = GetInt("max_cooldown");
             IsPassive = GetBool("passive");
             ItemCharges = GetInt("item_charges");
             AbilityCharges = GetInt("ability_charges");
@@ -160,6 +166,7 @@ namespace Dota2GSI.Nodes.ItemsProvider
                 $"ContainsRune: {ContainsRune}, " +
                 $"CanCast: {CanCast}, " +
                 $"Cooldown: {Cooldown}, " +
+                $"MaxCooldown: {MaxCooldown}, " +
                 $"IsPassive: {IsPassive}, " +
                 $"ItemCharges: {ItemCharges}, " +
                 $"AbilityCharges: {AbilityCharges}, " +
@@ -184,6 +191,7 @@ namespace Dota2GSI.Nodes.ItemsProvider
                 ContainsRune.Equals(other.ContainsRune) &&
                 CanCast.Equals(other.CanCast) &&
                 Cooldown.Equals(other.Cooldown) &&
+                MaxCooldown.Equals(other.MaxCooldown) &&
                 IsPassive.Equals(other.IsPassive) &&
                 ItemCharges.Equals(other.ItemCharges) &&
                 AbilityCharges.Equals(other.AbilityCharges) &&
@@ -202,6 +210,7 @@ namespace Dota2GSI.Nodes.ItemsProvider
             hashCode = hashCode * -280156728 + ContainsRune.GetHashCode();
             hashCode = hashCode * -280156728 + CanCast.GetHashCode();
             hashCode = hashCode * -280156728 + Cooldown.GetHashCode();
+            hashCode = hashCode * -280156728 + MaxCooldown.GetHashCode();
             hashCode = hashCode * -280156728 + IsPassive.GetHashCode();
             hashCode = hashCode * -280156728 + ItemCharges.GetHashCode();
             hashCode = hashCode * -280156728 + AbilityCharges.GetHashCode();

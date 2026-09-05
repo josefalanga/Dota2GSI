@@ -1,6 +1,7 @@
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -20,6 +21,8 @@ namespace Dota2GSI.Nodes
         /// Has this node been used to successfully read a value from json.
         /// </summary>
         private bool _successfully_retrieved_any_value = false;
+        private static readonly JTokenEqualityComparer _jtokenEqualityComparer = new JTokenEqualityComparer();
+
 
         internal Node(JObject parsed_data)
         {
@@ -209,6 +212,149 @@ namespace Dota2GSI.Nodes
             });
         }
 
+        /// <summary>
+        /// Returns true when the key exists in the parsed data, even if its value is null.
+        /// Never throws.
+        /// </summary>
+        public bool Has(string property_name)
+        {
+            return _ParsedData != null && _ParsedData.TryGetValue(property_name, out _);
+        }
+
+        /// <summary>
+        /// Returns the raw token for the key, or null when absent. Never throws.
+        /// </summary>
+        public JToken Get(string property_name)
+        {
+            JToken value;
+            if (_ParsedData != null && _ParsedData.TryGetValue(property_name, out value))
+            {
+                return value;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Tries to read the key as an int. Returns false (value = default) when the key
+        /// is missing, null, or not convertible. Never throws.
+        /// </summary>
+        public bool TryGetInt(string property_name, out int value)
+        {
+            value = default;
+            var token = Get(property_name);
+
+            if (token == null || token.Type == JTokenType.Null)
+            {
+                return false;
+            }
+
+            if (token.Type == JTokenType.Integer)
+            {
+                value = token.Value<int>();
+                return true;
+            }
+
+            return int.TryParse(token.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out value);
+        }
+
+        /// <summary>
+        /// Tries to read the key as a long. Returns false (value = default) when the key
+        /// is missing, null, or not convertible. Never throws.
+        /// </summary>
+        public bool TryGetLong(string property_name, out long value)
+        {
+            value = default;
+            var token = Get(property_name);
+
+            if (token == null || token.Type == JTokenType.Null)
+            {
+                return false;
+            }
+
+            if (token.Type == JTokenType.Integer)
+            {
+                value = token.Value<long>();
+                return true;
+            }
+
+            return long.TryParse(token.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out value);
+        }
+
+        /// <summary>
+        /// Tries to read the key as a float. Returns false (value = default) when the key
+        /// is missing, null, or not convertible. Never throws.
+        /// </summary>
+        public bool TryGetFloat(string property_name, out float value)
+        {
+            value = default;
+            var token = Get(property_name);
+
+            if (token == null || token.Type == JTokenType.Null)
+            {
+                return false;
+            }
+
+            if (token.Type == JTokenType.Float || token.Type == JTokenType.Integer)
+            {
+                value = token.Value<float>();
+                return true;
+            }
+
+            return float.TryParse(token.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out value);
+        }
+
+        /// <summary>
+        /// Tries to read the key as a string. Returns false (value = null) when the key
+        /// is missing or its value is null. Never throws.
+        /// </summary>
+        public bool TryGetString(string property_name, out string value)
+        {
+            value = null;
+            var token = Get(property_name);
+
+            if (token == null || token.Type == JTokenType.Null)
+            {
+                return false;
+            }
+
+            value = token.ToString();
+            return true;
+        }
+
+        /// <summary>
+        /// Tries to read the key as a bool. Returns false (value = default) when the key
+        /// is missing, null, or not convertible. Never throws.
+        /// </summary>
+        public bool TryGetBool(string property_name, out bool value)
+        {
+            value = default;
+            var token = Get(property_name);
+
+            if (token == null || token.Type == JTokenType.Null)
+            {
+                return false;
+            }
+
+            if (token.Type == JTokenType.Boolean)
+            {
+                value = token.Value<bool>();
+                return true;
+            }
+
+            return bool.TryParse(token.ToString(), out value);
+        }
+
+        /// <summary>
+        /// Tries to read the key as a raw token. Returns false (value = null) when the key
+        /// is missing or its value is null. Never throws.
+        /// </summary>
+        public bool TryGetJToken(string property_name, out JToken value)
+        {
+            value = Get(property_name);
+            return value != null && value.Type != JTokenType.Null;
+        }
+
         /// <inheritdoc/>
         public override string ToString()
         {
@@ -233,8 +379,7 @@ namespace Dota2GSI.Nodes
             }
 
             return obj is Node other &&
-                _ParsedData != null &&
-                _ParsedData.Equals(other._ParsedData) &&
+                JToken.DeepEquals(_ParsedData, other._ParsedData) &&
                 _successfully_retrieved_any_value.Equals(other._successfully_retrieved_any_value);
         }
 
@@ -242,7 +387,7 @@ namespace Dota2GSI.Nodes
         public override int GetHashCode()
         {
             int hashCode = 898763153;
-            hashCode = hashCode * -405816372 + _ParsedData.GetHashCode();
+            hashCode = hashCode * -405816372 + (_ParsedData != null ? _jtokenEqualityComparer.GetHashCode(_ParsedData) : 0);
             hashCode = hashCode * -405816372 + _successfully_retrieved_any_value.GetHashCode();
             return hashCode;
         }

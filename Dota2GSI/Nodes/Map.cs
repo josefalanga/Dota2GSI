@@ -1,4 +1,7 @@
+using Dota2GSI.Nodes.MapProvider;
 using Newtonsoft.Json.Linq;
+using System;
+using System.Text.RegularExpressions;
 
 namespace Dota2GSI.Nodes
 {
@@ -221,14 +224,91 @@ namespace Dota2GSI.Nodes
         public readonly int DireWardPurchaseCooldown;
 
         /// <summary>
+        /// The Radiant team's win probability as a float (0..1). -1 when not provided.
+        /// </summary>
+        public readonly float RadiantWinChance;
+
+        /// <summary>
         /// The state of Roshan. (SPECTATOR ONLY)
         /// </summary>
         public readonly RoshanState RoshanState;
 
-        /// <summary>
+/// <summary>
         /// The time in seconds until the Roshan state changes. (SPECTATOR ONLY)
         /// </summary>
         public readonly int RoshanStateEndTime;
+
+        /// <summary>
+        /// The current state of the Tormentor.
+        /// </summary>
+        public readonly string TormentorState;
+
+        /// <summary>
+        /// The time in seconds until the Tormentor state changes.
+        /// </summary>
+        public readonly int TormentorStateEndTime;
+
+        /// <summary>
+        /// The Tormentor's location ("top" or "bottom").
+        /// </summary>
+        public readonly string TormentorStateLocation;
+
+        /// <summary>
+        /// The Radiant team's glyph cooldown.
+        /// </summary>
+        public readonly int RadiantGlyphCooldown;
+
+        /// <summary>
+        /// The Dire team's glyph cooldown.
+        /// </summary>
+        public readonly int DireGlyphCooldown;
+
+        /// <summary>
+        /// The Radiant team's scan cooldown.
+        /// </summary>
+        public readonly int RadiantScanCooldown;
+
+        /// <summary>
+        /// The Radiant team's scan charges.
+        /// </summary>
+        public readonly int RadiantScanCharges;
+
+        /// <summary>
+        /// The Dire team's scan cooldown.
+        /// </summary>
+        public readonly int DireScanCooldown;
+
+        /// <summary>
+        /// The Dire team's scan charges.
+        /// </summary>
+        public readonly int DireScanCharges;
+
+        /// <summary>
+        /// A boolean representing whether the Radiant wisdom shrine is available.
+        /// </summary>
+        public readonly bool RadiantWisdomShrine;
+
+        /// <summary>
+        /// A boolean representing whether the Dire wisdom shrine is available.
+        /// </summary>
+        public readonly bool DireWisdomShrine;
+
+        /// <summary>
+        /// The Radiant team's lotus pool count.
+        /// </summary>
+        public readonly int RadiantLotusPoolCount;
+
+        /// <summary>
+        /// The Dire team's lotus pool count.
+        /// </summary>
+        public readonly int DireLotusPoolCount;
+
+        /// <summary>
+        /// The map watchers. The key is the watcher ID.
+        /// </summary>
+        public readonly NodeMap<int, Watcher> Watchers = new NodeMap<int, Watcher>();
+
+        private Regex _watcher_id_regex = new Regex(@"watcher(\d+)");
 
         internal Map(JObject parsed_data = null) : base(parsed_data)
         {
@@ -246,11 +326,41 @@ namespace Dota2GSI.Nodes
             CustomGameName = GetString("customgamename");
             RadiantWardPurchaseCooldown = GetInt("radiant_ward_purchase_cooldown");
             DireWardPurchaseCooldown = GetInt("dire_ward_purchase_cooldown");
+            RadiantWinChance = GetFloat("radiant_win_chance");
             // There is mentions of "radiant_win_chance" in game code, but no mention of "dire_win_chance".
             // Omitting "radiant_win_chance" since there is no dire counterpart.
             RoshanState = GetEnum<RoshanState>("roshan_state");
             RoshanStateEndTime = GetInt("roshan_state_end_seconds");
             WardPurchaseCooldown = GetInt("ward_purchase_cooldown");
+
+            TormentorState = GetString("tormentor_state");
+            TormentorStateEndTime = GetInt("tormentor_state_end_seconds");
+            TormentorStateLocation = GetString("tormentor_state_location");
+            RadiantGlyphCooldown = GetInt("radiant_glyph_cooldown");
+            DireGlyphCooldown = GetInt("dire_glyph_cooldown");
+            RadiantScanCooldown = GetInt("radiant_scan_cooldown");
+            RadiantScanCharges = GetInt("radiant_scan_charges");
+            DireScanCooldown = GetInt("dire_scan_cooldown");
+            DireScanCharges = GetInt("dire_scan_charges");
+            RadiantWisdomShrine = GetBool("radiant_wisdom_shrine");
+            DireWisdomShrine = GetBool("dire_wisdom_shrine");
+            RadiantLotusPoolCount = GetInt("radiant_lotus_pool_count");
+            DireLotusPoolCount = GetInt("dire_lotus_pool_count");
+
+            GetMatchingObjects(GetJObject("watchers"), _watcher_id_regex, (Match match, JObject obj) =>
+            {
+                var watcher_index = Convert.ToInt32(match.Groups[1].Value);
+                var watcher = new Watcher(obj);
+
+                if (!Watchers.ContainsKey(watcher_index))
+                {
+                    Watchers.Add(watcher_index, watcher);
+                }
+                else
+                {
+                    Watchers[watcher_index] = watcher;
+                }
+            });
         }
 
         /// <inheritdoc/>
@@ -265,6 +375,7 @@ namespace Dota2GSI.Nodes
                 $"IsNightstalkerNight: {IsNightstalkerNight}, " +
                 $"RadiantScore: {RadiantScore}, " +
                 $"DireScore: {DireScore}, " +
+                $"RadiantWinChance: {RadiantWinChance}, " +
                 $"GameState: {GameState}, " +
                 $"IsPaused: {IsPaused}, " +
                 $"WinningTeam: {WinningTeam}, " +
@@ -273,7 +384,21 @@ namespace Dota2GSI.Nodes
                 $"RadiantWardPurchaseCooldown: {RadiantWardPurchaseCooldown}, " +
                 $"DireWardPurchaseCooldown: {DireWardPurchaseCooldown}, " +
                 $"RoshanState: {RoshanState}, " +
-                $"RoshanStateEndTime: {RoshanStateEndTime}" +
+                $"RoshanStateEndTime: {RoshanStateEndTime}, " +
+                $"TormentorState: {TormentorState}, " +
+                $"TormentorStateEndTime: {TormentorStateEndTime}, " +
+                $"TormentorStateLocation: {TormentorStateLocation}, " +
+                $"RadiantGlyphCooldown: {RadiantGlyphCooldown}, " +
+                $"DireGlyphCooldown: {DireGlyphCooldown}, " +
+                $"RadiantScanCooldown: {RadiantScanCooldown}, " +
+                $"RadiantScanCharges: {RadiantScanCharges}, " +
+                $"DireScanCooldown: {DireScanCooldown}, " +
+                $"DireScanCharges: {DireScanCharges}, " +
+                $"RadiantWisdomShrine: {RadiantWisdomShrine}, " +
+                $"DireWisdomShrine: {DireWisdomShrine}, " +
+                $"RadiantLotusPoolCount: {RadiantLotusPoolCount}, " +
+                $"DireLotusPoolCount: {DireLotusPoolCount}, " +
+                $"Watchers: {Watchers}" +
                 $"]";
         }
 
@@ -294,6 +419,7 @@ namespace Dota2GSI.Nodes
                 IsNightstalkerNight.Equals(other.IsNightstalkerNight) &&
                 RadiantScore.Equals(other.RadiantScore) &&
                 DireScore.Equals(other.DireScore) &&
+                RadiantWinChance.Equals(other.RadiantWinChance) &&
                 GameState.Equals(other.GameState) &&
                 IsPaused.Equals(other.IsPaused) &&
                 WinningTeam.Equals(other.WinningTeam) &&
@@ -302,7 +428,21 @@ namespace Dota2GSI.Nodes
                 RadiantWardPurchaseCooldown.Equals(other.RadiantWardPurchaseCooldown) &&
                 DireWardPurchaseCooldown.Equals(other.DireWardPurchaseCooldown) &&
                 RoshanState.Equals(other.RoshanState) &&
-                RoshanStateEndTime.Equals(other.RoshanStateEndTime);
+                RoshanStateEndTime.Equals(other.RoshanStateEndTime) &&
+                TormentorState.Equals(other.TormentorState) &&
+                TormentorStateEndTime.Equals(other.TormentorStateEndTime) &&
+                TormentorStateLocation.Equals(other.TormentorStateLocation) &&
+                RadiantGlyphCooldown.Equals(other.RadiantGlyphCooldown) &&
+                DireGlyphCooldown.Equals(other.DireGlyphCooldown) &&
+                RadiantScanCooldown.Equals(other.RadiantScanCooldown) &&
+                RadiantScanCharges.Equals(other.RadiantScanCharges) &&
+                DireScanCooldown.Equals(other.DireScanCooldown) &&
+                DireScanCharges.Equals(other.DireScanCharges) &&
+                RadiantWisdomShrine.Equals(other.RadiantWisdomShrine) &&
+                DireWisdomShrine.Equals(other.DireWisdomShrine) &&
+                RadiantLotusPoolCount.Equals(other.RadiantLotusPoolCount) &&
+                DireLotusPoolCount.Equals(other.DireLotusPoolCount) &&
+                Watchers.Equals(other.Watchers);
         }
 
         /// <inheritdoc/>
@@ -317,6 +457,7 @@ namespace Dota2GSI.Nodes
             hashCode = hashCode * -955669127 + IsNightstalkerNight.GetHashCode();
             hashCode = hashCode * -955669127 + RadiantScore.GetHashCode();
             hashCode = hashCode * -955669127 + DireScore.GetHashCode();
+            hashCode = hashCode * -955669127 + RadiantWinChance.GetHashCode();
             hashCode = hashCode * -955669127 + GameState.GetHashCode();
             hashCode = hashCode * -955669127 + IsPaused.GetHashCode();
             hashCode = hashCode * -955669127 + WinningTeam.GetHashCode();
@@ -326,6 +467,20 @@ namespace Dota2GSI.Nodes
             hashCode = hashCode * -955669127 + DireWardPurchaseCooldown.GetHashCode();
             hashCode = hashCode * -955669127 + RoshanState.GetHashCode();
             hashCode = hashCode * -955669127 + RoshanStateEndTime.GetHashCode();
+            hashCode = hashCode * -955669127 + TormentorState.GetHashCode();
+            hashCode = hashCode * -955669127 + TormentorStateEndTime.GetHashCode();
+            hashCode = hashCode * -955669127 + TormentorStateLocation.GetHashCode();
+            hashCode = hashCode * -955669127 + RadiantGlyphCooldown.GetHashCode();
+            hashCode = hashCode * -955669127 + DireGlyphCooldown.GetHashCode();
+            hashCode = hashCode * -955669127 + RadiantScanCooldown.GetHashCode();
+            hashCode = hashCode * -955669127 + RadiantScanCharges.GetHashCode();
+            hashCode = hashCode * -955669127 + DireScanCooldown.GetHashCode();
+            hashCode = hashCode * -955669127 + DireScanCharges.GetHashCode();
+            hashCode = hashCode * -955669127 + RadiantWisdomShrine.GetHashCode();
+            hashCode = hashCode * -955669127 + DireWisdomShrine.GetHashCode();
+            hashCode = hashCode * -955669127 + RadiantLotusPoolCount.GetHashCode();
+            hashCode = hashCode * -955669127 + DireLotusPoolCount.GetHashCode();
+            hashCode = hashCode * -955669127 + Watchers.GetHashCode();
             return hashCode;
         }
     }

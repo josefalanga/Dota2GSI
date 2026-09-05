@@ -1,6 +1,7 @@
 using Dota2GSI.Nodes;
 using Dota2GSI.Nodes.Helpers;
 using Newtonsoft.Json.Linq;
+using System;
 
 namespace Dota2GSI
 {
@@ -106,6 +107,20 @@ namespace Dota2GSI
         public readonly NeutralItems NeutralItems;
 
         /// <summary>
+        /// Experimental block: detailed per-unit information keyed by unit id.<br/>
+        /// Only populated when the experimental GSI cfg block is enabled.<br/>
+        /// Null when the block is absent from the payload.
+        /// </summary>
+        public readonly FullUnits FullUnits;
+
+        /// <summary>
+        /// Experimental block: ordered list of hero kill records.<br/>
+        /// Only populated when the experimental GSI cfg block is enabled.<br/>
+        /// Null when the block is absent from the payload.
+        /// </summary>
+        public readonly FullHeroKills FullHeroKills;
+
+        /// <summary>
         /// A previous GameState.
         /// </summary>
         public GameState Previously
@@ -114,12 +129,30 @@ namespace Dota2GSI
             {
                 if (_previous_game_state == null)
                 {
-                    _previous_game_state = new GameState(GetJObject("previously"));
+                    JObject previously = GetJObject("previously");
+
+                    if (previously == null)
+                    {
+                        // No "previously" block in this payload (first tick).
+                        // Do not cache an empty state: return a transient one so a
+                        // later payload containing "previously" is parsed correctly.
+                        return new GameState();
+                    }
+
+                    _previous_game_state = new GameState(previously);
                 }
 
                 return _previous_game_state;
             }
         }
+        /// <summary>
+        /// The original parsed JObject.
+        /// </summary>
+        public JObject RawJson => _ParsedData;
+        /// <summary>
+        /// The added block containing newly-added sections since the last tick.
+        /// </summary>
+        public JObject Added => _added;
 
         /// <summary>
         /// Helper variable,<br/>
@@ -223,6 +256,7 @@ namespace Dota2GSI
         private FullTeamDetails _radiant_team_details;
         private FullTeamDetails _dire_team_details;
         private FullTeamDetails _neutral_team_details;
+        private JObject _added;
 
         /// <summary>
         /// Creates a GameState instance based on the given json data.
@@ -230,22 +264,48 @@ namespace Dota2GSI
         /// <param name="parsed_data">The parsed json data.</param>
         public GameState(JObject parsed_data = null) : base(parsed_data)
         {
-            Auth = new Auth(GetJObject("auth"));
-            Provider = new Provider(GetJObject("provider"));
-            Map = new Map(GetJObject("map"));
-            Player = new Player(GetJObject("player"));
-            Hero = new Hero(GetJObject("hero"));
-            Abilities = new Abilities(GetJObject("abilities"));
-            Items = new Items(GetJObject("items"));
-            Events = new Events(GetJArray("events"));
-            Buildings = new Buildings(GetJObject("buildings"));
-            League = new League(GetJObject("league"));
-            Draft = new Draft(GetJObject("draft"));
-            Wearables = new Wearables(GetJObject("wearables"));
-            Minimap = new Minimap(GetJObject("minimap"));
-            Roshan = new Roshan(GetJObject("roshan"));
-            Couriers = new Couriers(GetJObject("couriers"));
-            NeutralItems = new NeutralItems(GetJObject("neutralitems"));
+            _added = parsed_data?.Value<JObject>("added");
+            Auth = SafeCreate(() => new Auth(GetJObject("auth")), new Auth());
+            Provider = SafeCreate(() => new Provider(GetJObject("provider")), new Provider());
+            Map = SafeCreate(() => new Map(GetJObject("map")), new Map());
+            Player = SafeCreate(() => new Player(GetJObject("player")), new Player());
+            Hero = SafeCreate(() => new Hero(GetJObject("hero")), new Hero());
+            Abilities = SafeCreate(() => new Abilities(GetJObject("abilities")), new Abilities());
+            Items = SafeCreate(() => new Items(GetJObject("items")), new Items());
+            Events = SafeCreate(() => new Events(GetJArray("events")), new Events());
+            Buildings = SafeCreate(() => new Buildings(GetJObject("buildings")), new Buildings());
+            League = SafeCreate(() => new League(GetJObject("league")), new League());
+            Draft = SafeCreate(() => new Draft(GetJObject("draft")), new Draft());
+            Wearables = SafeCreate(() => new Wearables(GetJObject("wearables")), new Wearables());
+            Minimap = SafeCreate(() => new Minimap(GetJObject("minimap")), new Minimap());
+            Roshan = SafeCreate(() => new Roshan(GetJObject("roshan")), new Roshan());
+            Couriers = SafeCreate(() => new Couriers(GetJObject("couriers")), new Couriers());
+            NeutralItems = SafeCreate(() => new NeutralItems(GetJObject("neutralitems")), new NeutralItems());
+
+            var full_units_obj = GetJObject("full_units");
+            if (full_units_obj != null)
+            {
+                FullUnits = new FullUnits(full_units_obj);
+            }
+
+            var full_hero_kills_arr = GetJArray("full_hero_kills");
+            if (full_hero_kills_arr != null)
+            {
+                FullHeroKills = new FullHeroKills(full_hero_kills_arr);
+            }
+        }
+
+        private static T SafeCreate<T>(Func<T> create, T fallback)
+        {
+            try
+            {
+                return create();
+            }
+            catch (Exception)
+            {
+                // Malformed data for this node only; leave it as an absent node.
+                return fallback;
+            }
         }
     }
 }

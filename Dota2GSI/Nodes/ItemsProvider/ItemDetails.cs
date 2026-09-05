@@ -39,10 +39,16 @@ namespace Dota2GSI.Nodes.ItemsProvider
         /// </summary>
         public Item Neutral = new Item();
 
+        /// <summary>
+        /// List of the preserved neutral items (neutral item slots 6..10).
+        /// </summary>
+        public readonly NodeList<Item> PreservedNeutral = new NodeList<Item>();
+
         private Regex _slot_regex = new Regex(@"slot(\d+)");
         private Regex _stash_regex = new Regex(@"stash(\d+)");
         private Regex _teleport_regex = new Regex(@"teleport(\d+)");
         private Regex _neutral_regex = new Regex(@"neutral(\d+)");
+        private Regex _preserved_neutral_regex = new Regex(@"preserved_neutral(\d+)");
 
         internal ItemDetails(JObject parsed_data = null) : base(parsed_data)
         {
@@ -68,6 +74,12 @@ namespace Dota2GSI.Nodes.ItemsProvider
             {
                 Item item = new Item(obj);
                 Neutral = item;
+            });
+
+            GetMatchingObjects(parsed_data, _preserved_neutral_regex, (Match match, JObject obj) =>
+            {
+                Item item = new Item(obj);
+                PreservedNeutral.Add(item);
             });
         }
 
@@ -203,6 +215,7 @@ namespace Dota2GSI.Nodes.ItemsProvider
                 $"Stash: {Stash}, " +
                 $"Teleport: {Teleport}, " +
                 $"Neutral: {Neutral}, " +
+                $"PreservedNeutral: {PreservedNeutral}, " +
                 $"]";
         }
 
@@ -218,7 +231,8 @@ namespace Dota2GSI.Nodes.ItemsProvider
                 Inventory.Equals(other.Inventory) &&
                 Stash.Equals(other.Stash) &&
                 Teleport.Equals(other.Teleport) &&
-                Neutral.Equals(other.Neutral);
+                Neutral.Equals(other.Neutral) &&
+                PreservedNeutral.Equals(other.PreservedNeutral);
         }
 
         /// <inheritdoc/>
@@ -229,6 +243,7 @@ namespace Dota2GSI.Nodes.ItemsProvider
             hashCode = hashCode * -709592358 + Stash.GetHashCode();
             hashCode = hashCode * -709592358 + Teleport.GetHashCode();
             hashCode = hashCode * -709592358 + Neutral.GetHashCode();
+            hashCode = hashCode * -709592358 + PreservedNeutral.GetHashCode();
             return hashCode;
         }
     }
