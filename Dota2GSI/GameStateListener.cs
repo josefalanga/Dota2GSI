@@ -79,7 +79,7 @@ namespace Dota2GSI
         /// </summary>
         public bool Running { get { return _is_running; } }
         // Disposal tracking for idempotent Dispose().
-        private readonly bool _disposed = false;
+        private bool _disposed = false;
 
         /// <summary>
         /// Event for handing a newly received game state.
