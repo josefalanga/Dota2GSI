@@ -112,7 +112,7 @@ namespace Dota2GSI
         private GameState _current_game_state = new GameState();
 
         // Dispatcher for game events.
-        private static EventDispatcher<DotaGameEvent> _dispatcher = new EventDispatcher<DotaGameEvent>();
+        private EventDispatcher<DotaGameEvent> _dispatcher = new EventDispatcher<DotaGameEvent>();
 
         // Game State handlers.
         private AbilitiesHandler _abilities_handler = new AbilitiesHandler(ref _dispatcher);
