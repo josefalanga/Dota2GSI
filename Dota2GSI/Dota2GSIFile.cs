@@ -9,6 +9,9 @@ namespace Dota2GSI
     /// </summary>
     public class Dota2GSIFile
     {
+        // One-shot guard so the experimental-mode warning prints at most once per process.
+        private static bool _experimental_warned = false;
+
         /// <summary>
         /// Attempts to create a Game State Integration configuraion file.<br/>
         /// The configuration will target <c>http://localhost:{port}/</c> address.<br/>
@@ -85,10 +88,14 @@ namespace Dota2GSI
                     gsi_configuration.Items["heartbeat"] = "10.0";
                     gsi_configuration.Children["data"] = provider_configuration;
 
-                    if (experimental)
+                    if (experimental && !_experimental_warned)
                     {
                         Console.WriteLine("[Dota2GSI] Experimental GSI block enabled: tick data volume will increase substantially.");
+                        _experimental_warned = true;
+                    }
 
+                    if (experimental)
+                    {
                         ACF experimental_output = new ACF();
                         experimental_output.Items["precision"] = "1";
 
