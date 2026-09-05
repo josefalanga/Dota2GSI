@@ -262,3 +262,5 @@ compile_commands.json
 CTestTestfile.cmake
 _deps
 build/
+# Captured GSI payloads (ground truth for typed-node contributions)
+/captured/
