@@ -1,5 +1,6 @@
 using Dota2GSI.Nodes.Helpers;
 using Newtonsoft.Json.Linq;
+using System;
 using System.Linq;
 
 namespace Dota2GSI.Nodes.HeroProvider
@@ -33,6 +34,7 @@ namespace Dota2GSI.Nodes.HeroProvider
     /// <summary>
     /// The hero state.
     /// </summary>
+    [Flags]
     public enum HeroState
     {
         /// <summary>
@@ -43,42 +45,42 @@ namespace Dota2GSI.Nodes.HeroProvider
         /// <summary>
         /// Hero is silenced.
         /// </summary>
-        Silenced,
+        Silenced = 1,
 
         /// <summary>
         /// Hero is stunned.
         /// </summary>
-        Stunned,
+        Stunned = 2,
 
         /// <summary>
         /// Hero is disarmed.
         /// </summary>
-        Disarmed,
+        Disarmed = 4,
 
         /// <summary>
         /// Hero is magic immune.
         /// </summary>
-        MagicImmune,
+        MagicImmune = 8,
 
         /// <summary>
         /// Hero is hexed.
         /// </summary>
-        Hexed,
+        Hexed = 16,
 
         /// <summary>
         /// Hero is broken.
         /// </summary>
-        Broken,
+        Broken = 32,
 
         /// <summary>
         /// Hero is smoked.
         /// </summary>
-        Smoked,
+        Smoked = 64,
 
         /// <summary>
         /// Hero is debuffed.
         /// </summary>
-        Debuffed
+        Debuffed = 128
     }
 
     /// <summary>
@@ -272,42 +274,42 @@ namespace Dota2GSI.Nodes.HeroProvider
 
             if (GetBool("silenced"))
             {
-                HeroState &= HeroState.Silenced;
+                HeroState |= HeroState.Silenced;
             }
 
             if (GetBool("stunned"))
             {
-                HeroState &= HeroState.Stunned;
+                HeroState |= HeroState.Stunned;
             }
 
             if (GetBool("disarmed"))
             {
-                HeroState &= HeroState.Disarmed;
+                HeroState |= HeroState.Disarmed;
             }
 
             if (GetBool("magicimmune"))
             {
-                HeroState &= HeroState.MagicImmune;
+                HeroState |= HeroState.MagicImmune;
             }
 
             if (GetBool("hexed"))
             {
-                HeroState &= HeroState.Hexed;
+                HeroState |= HeroState.Hexed;
             }
 
             if (GetBool("break"))
             {
-                HeroState &= HeroState.Broken;
+                HeroState |= HeroState.Broken;
             }
 
             if (GetBool("smoked"))
             {
-                HeroState &= HeroState.Smoked;
+                HeroState |= HeroState.Smoked;
             }
 
             if (GetBool("has_debuff"))
             {
-                HeroState &= HeroState.Debuffed;
+                HeroState |= HeroState.Debuffed;
             }
 
             TalentTree = new TalentTreeSpec[4];
@@ -410,6 +412,7 @@ namespace Dota2GSI.Nodes.HeroProvider
                 Mana.Equals(other.Mana) &&
                 MaxMana.Equals(other.MaxMana) &&
                 ManaPercent.Equals(other.ManaPercent) &&
+                HeroState.Equals(other.HeroState) &&
                 IsMuted.Equals(other.IsMuted) &&
                 HasAghanimsScepterUpgrade.Equals(other.HasAghanimsScepterUpgrade) &&
                 HasAghanimsShardUpgrade.Equals(other.HasAghanimsShardUpgrade) &&
@@ -439,6 +442,7 @@ namespace Dota2GSI.Nodes.HeroProvider
             hashCode = hashCode * -287957234 + Mana.GetHashCode();
             hashCode = hashCode * -287957234 + MaxMana.GetHashCode();
             hashCode = hashCode * -287957234 + ManaPercent.GetHashCode();
+            hashCode = hashCode * -287957234 + HeroState.GetHashCode();
             hashCode = hashCode * -287957234 + IsMuted.GetHashCode();
             hashCode = hashCode * -287957234 + HasAghanimsScepterUpgrade.GetHashCode();
             hashCode = hashCode * -287957234 + HasAghanimsShardUpgrade.GetHashCode();
