@@ -23,14 +23,14 @@ namespace Dota2GSI
                 return;
             }
 
-            foreach (var neutral_items_kvp in evt.New.TeamItems)
+            foreach (var neutral_items_kvp in evt.New.Teams)
             {
-                if (!evt.Previous.TeamItems.ContainsKey(neutral_items_kvp.Key))
+                if (!evt.Previous.Teams.ContainsKey(neutral_items_kvp.Key))
                 {
                     continue;
                 }
 
-                var previous_neutral_items = evt.Previous.TeamItems[neutral_items_kvp.Key];
+                var previous_neutral_items = evt.Previous.Teams[neutral_items_kvp.Key];
 
                 if (!neutral_items_kvp.Value.Equals(previous_neutral_items))
                 {
