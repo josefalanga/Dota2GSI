@@ -294,7 +294,7 @@ namespace Dota2GSI
                 FullHeroKills = new FullHeroKills(full_hero_kills_arr);
             }
         }
-    }
+
         private static T SafeCreate<T>(Func<T> create, T fallback)
         {
             try
@@ -307,5 +307,5 @@ namespace Dota2GSI
                 return fallback;
             }
         }
-
+    }
 }

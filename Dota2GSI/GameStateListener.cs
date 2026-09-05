@@ -66,7 +66,6 @@ namespace Dota2GSI
                     _previous_game_state = _current_game_state;
                     _current_game_state = value;
                     RaiseOnNewGameState(ref _current_game_state);
-<<<<<<< HEAD
                     if (value.Added != null && value.Added.HasValues)
                     {
                         foreach (var prop in value.Added.Properties())
@@ -77,8 +76,6 @@ namespace Dota2GSI
                             }
                         }
                     }
-=======
->>>>>>> fix/listener-dispose
                 }
             }
         }
@@ -98,11 +95,7 @@ namespace Dota2GSI
         /// </summary>
         public bool Running { get { return _is_running; } }
         // Disposal tracking for idempotent Dispose().
-<<<<<<< HEAD
         private bool _disposed = false;
-=======
-        private bool _disposed = false;
->>>>>>> fix/listener-dispose
 
         /// <summary>
         /// Event for handing a newly received game state.
@@ -114,14 +107,11 @@ namespace Dota2GSI
         /// </summary>
         public event NewRawGameStateHandler NewRawGameState = delegate { };
 
-<<<<<<< HEAD
         /// <summary>
         /// Event for handing per-leaf changes from the Added block.
         /// </summary>
         public event Action<string, JObject> LeafChanged = delegate { };
 
-=======
->>>>>>> fix/listener-dispose
         private readonly object gamestate_lock = new object();
 
         private bool _is_running = false;
@@ -133,35 +123,31 @@ namespace Dota2GSI
         private GameState _current_game_state = new GameState();
 
         // Dispatcher for game events.
-<<<<<<< HEAD
         private EventDispatcher<DotaGameEvent> _dispatcher = new EventDispatcher<DotaGameEvent>();
-=======
-        private static EventDispatcher<DotaGameEvent> _dispatcher = new EventDispatcher<DotaGameEvent>();
->>>>>>> fix/listener-dispose
 
         // Game State handlers.
-        private AbilitiesHandler _abilities_handler = new AbilitiesHandler(ref _dispatcher);
-        private AuthHandler _auth_handler = new AuthHandler(ref _dispatcher);
-        private BuildingsHandler _buildings_handler = new BuildingsHandler(ref _dispatcher);
-        private CouriersHandler _couriers_handler = new CouriersHandler(ref _dispatcher);
-        private DraftHandler _draft_handler = new DraftHandler(ref _dispatcher);
-        private GameplayEventsHandler _gameplay_events_handler = new GameplayEventsHandler(ref _dispatcher);
-        private HeroHandler _hero_handler = new HeroHandler(ref _dispatcher);
-        private ItemsHandler _items_handler = new ItemsHandler(ref _dispatcher);
-        private LeagueHandler _league_handler = new LeagueHandler(ref _dispatcher);
-        private MapHandler _map_handler = new MapHandler(ref _dispatcher);
-        private MinimapHandler _minimap_handler = new MinimapHandler(ref _dispatcher);
-        private NeutralItemsHandler _neutral_items_handler = new NeutralItemsHandler(ref _dispatcher);
-        private PlayerHandler _player_handler = new PlayerHandler(ref _dispatcher);
-        private ProviderHandler _provider_handler = new ProviderHandler(ref _dispatcher);
-        private RoshanHandler _roshan_handler = new RoshanHandler(ref _dispatcher);
-        private WearablesHandler _wearables_handler = new WearablesHandler(ref _dispatcher);
+        private AbilitiesHandler _abilities_handler ;
+        private AuthHandler _auth_handler ;
+        private BuildingsHandler _buildings_handler ;
+        private CouriersHandler _couriers_handler ;
+        private DraftHandler _draft_handler ;
+        private GameplayEventsHandler _gameplay_events_handler ;
+        private HeroHandler _hero_handler ;
+        private ItemsHandler _items_handler ;
+        private LeagueHandler _league_handler ;
+        private MapHandler _map_handler ;
+        private MinimapHandler _minimap_handler ;
+        private NeutralItemsHandler _neutral_items_handler ;
+        private PlayerHandler _player_handler ;
+        private ProviderHandler _provider_handler ;
+        private RoshanHandler _roshan_handler ;
+        private WearablesHandler _wearables_handler ;
 
         // Custom handlers.
-        private FullDetailsHandler _full_details_handler = new FullDetailsHandler(ref _dispatcher);
+        private FullDetailsHandler _full_details_handler ;
 
         // Overall GameState handler.
-        private GameStateHandler _game_state_handler = new GameStateHandler(ref _dispatcher);
+        private GameStateHandler _game_state_handler ;
 
         /// <summary>
         /// Default constructor.
@@ -169,6 +155,24 @@ namespace Dota2GSI
         private GameStateListener()
         {
             _dispatcher.GameEvent += OnNewGameEvent;
+            _abilities_handler = new AbilitiesHandler(ref _dispatcher);
+            _auth_handler = new AuthHandler(ref _dispatcher);
+            _buildings_handler = new BuildingsHandler(ref _dispatcher);
+            _couriers_handler = new CouriersHandler(ref _dispatcher);
+            _draft_handler = new DraftHandler(ref _dispatcher);
+            _gameplay_events_handler = new GameplayEventsHandler(ref _dispatcher);
+            _hero_handler = new HeroHandler(ref _dispatcher);
+            _items_handler = new ItemsHandler(ref _dispatcher);
+            _league_handler = new LeagueHandler(ref _dispatcher);
+            _map_handler = new MapHandler(ref _dispatcher);
+            _minimap_handler = new MinimapHandler(ref _dispatcher);
+            _neutral_items_handler = new NeutralItemsHandler(ref _dispatcher);
+            _player_handler = new PlayerHandler(ref _dispatcher);
+            _provider_handler = new ProviderHandler(ref _dispatcher);
+            _roshan_handler = new RoshanHandler(ref _dispatcher);
+            _wearables_handler = new WearablesHandler(ref _dispatcher);
+            _full_details_handler = new FullDetailsHandler(ref _dispatcher);
+            _game_state_handler = new GameStateHandler(ref _dispatcher);
         }
 
         /// <summary>
@@ -280,8 +284,6 @@ namespace Dota2GSI
 
                 _wait_for_connection.Set();
 
-                NewRawGameState(json_data);
-
                 using (Stream inputStream = request.InputStream)
                 {
                     using (StreamReader sr = new StreamReader(inputStream))
@@ -289,6 +291,8 @@ namespace Dota2GSI
                         json_data = sr.ReadToEnd();
                     }
                 }
+
+                NewRawGameState(json_data);
                 using (HttpListenerResponse response = context.Response)
                 {
                     response.StatusCode = (int)HttpStatusCode.OK;
@@ -296,7 +300,6 @@ namespace Dota2GSI
                     response.Close();
                 }
 
-<<<<<<< HEAD
                 JObject parsed_data;
                 try
                 {
@@ -310,16 +313,13 @@ namespace Dota2GSI
 
                 CurrentGameState = new GameState(parsed_data);
             }
-            catch (Exception)
-            {
-                // Never let an exception escape the tick handler.
-=======
-                CurrentGameState = new GameState(JObject.Parse(json_data));
->>>>>>> fix/listener-dispose
-            }
             catch (ObjectDisposedException)
             {
                 // Intentionally left blank, when the Listener is closed.
+            }
+            catch (Exception)
+            {
+                // Never let an exception escape the tick handler.
             }
         }
 
@@ -330,14 +330,11 @@ namespace Dota2GSI
             _game_state_handler.OnNewGameState(game_state);
         }
 
-<<<<<<< HEAD
         private void RaiseOnLeafChanged(string leafName, JObject leafValue)
         {
             LeafChanged?.Invoke(leafName, leafValue);
         }
 
-=======
->>>>>>> fix/listener-dispose
         /// <summary>
         /// Stops the listener and frees up resources.
         /// </summary>
