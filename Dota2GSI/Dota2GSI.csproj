@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Dota2GSI</RootNamespace>
+    <PackageId>Dota2GSI</PackageId>
+    <Version>2.1.1</Version>
+    <Authors>Anton Pupkov and contributors</Authors>
+    <Description>A C# library to interface with the Game State Integration found in Dota 2.</Description>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+</Project>
