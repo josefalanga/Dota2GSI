@@ -1,4 +1,4 @@
-﻿using Dota2GSI.EventMessages;
+using Dota2GSI.EventMessages;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -23,6 +23,11 @@ namespace Dota2GSI
         private Dictionary<Type, HashSet<Action<T>>> subscriptions = new Dictionary<Type, HashSet<Action<T>>>();
         private Dictionary<Type, HashSet<Func<T, T>>> pre_processors = new Dictionary<Type, HashSet<Func<T, T>>>();
 
+        // Dedup: bounded recent-key cache to prevent double-firing from multiple listeners
+        private const int DedupWindowSize = 50;
+        private readonly HashSet<string> _recentKeys = new HashSet<string>();
+        private readonly Queue<string> _keyQueue = new Queue<string>();
+
         public EventDispatcher()
         {
             Subscribe<T>(RaiseOnGameEventHandler);
@@ -31,6 +36,58 @@ namespace Dota2GSI
         ~EventDispatcher()
         {
             Unsubscribe<T>(RaiseOnGameEventHandler);
+        }
+
+        private string ExtractPlayerIds(T gameEvent)
+        {
+            // Try common player ID fields across event types
+            var ids = new List<string>();
+
+            // Try Player property (FullPlayerDetails with PlayerID)
+            var playerProp = gameEvent.GetType().GetProperty("Player");
+            if (playerProp != null)
+            {
+                var player = playerProp.GetValue(gameEvent);
+                if (player != null)
+                {
+                    var playerIdProp = player.GetType().GetProperty("PlayerID");
+                    if (playerIdProp != null)
+                    {
+                        ids.Add(playerIdProp.GetValue(player)?.ToString() ?? "-1");
+                    }
+                }
+            }
+
+            // Try KillerPlayerID
+            var killerProp = gameEvent.GetType().GetProperty("KillerPlayerID");
+            if (killerProp != null)
+            {
+                var killerId = killerProp.GetValue(gameEvent);
+                if (killerId != null && !ids.Contains(killerId.ToString()))
+                {
+                    ids.Add(killerId.ToString());
+                }
+            }
+
+            // Try EntityID
+            var entityProp = gameEvent.GetType().GetProperty("EntityID");
+            if (entityProp != null)
+            {
+                var entityId = entityProp.GetValue(gameEvent);
+                if (entityId != null && !ids.Contains(entityId.ToString()))
+                {
+                    ids.Add(entityId.ToString());
+                }
+            }
+
+            return string.Join("|", ids.ToArray());
+        }
+
+        private string BuildDedupKey<MessageType>(MessageType message) where MessageType : T
+        {
+            string eventTypeName = typeof(MessageType).Name;
+            string playerIds = ExtractPlayerIds(message);
+            return $"{eventTypeName}|{playerIds}";
         }
 
         private void RaiseOnGameEventHandler(T game_event)
@@ -116,6 +173,22 @@ namespace Dota2GSI
 
             lock (subscriptions_lock)
             {
+                // --- Dedup check ---
+                string dedupKey = BuildDedupKey(message);
+                if (_recentKeys.Contains(dedupKey))
+                {
+                    // Same key seen within window — skip dispatch to avoid double-fire
+                    return;
+                }
+                _recentKeys.Add(dedupKey);
+                _keyQueue.Enqueue(dedupKey);
+                if (_keyQueue.Count > DedupWindowSize)
+                {
+                    string oldKey = _keyQueue.Dequeue();
+                    _recentKeys.Remove(oldKey);
+                }
+                // ----------------
+
                 if (subscriptions.ContainsKey(event_type))
                 {
                     // Run pre-processors first
