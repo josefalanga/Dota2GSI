@@ -1,6 +1,7 @@
 using Dota2GSI.Nodes;
 using Dota2GSI.Nodes.Helpers;
 using Newtonsoft.Json.Linq;
+using System;
 
 namespace Dota2GSI
 {
@@ -250,22 +251,35 @@ namespace Dota2GSI
         public GameState(JObject parsed_data = null) : base(parsed_data)
         {
             _added = parsed_data?.Value<JObject>("added");
-            Auth = new Auth(GetJObject("auth"));
-            Provider = new Provider(GetJObject("provider"));
-            Map = new Map(GetJObject("map"));
-            Player = new Player(GetJObject("player"));
-            Hero = new Hero(GetJObject("hero"));
-            Abilities = new Abilities(GetJObject("abilities"));
-            Items = new Items(GetJObject("items"));
-            Events = new Events(GetJArray("events"));
-            Buildings = new Buildings(GetJObject("buildings"));
-            League = new League(GetJObject("league"));
-            Draft = new Draft(GetJObject("draft"));
-            Wearables = new Wearables(GetJObject("wearables"));
-            Minimap = new Minimap(GetJObject("minimap"));
-            Roshan = new Roshan(GetJObject("roshan"));
-            Couriers = new Couriers(GetJObject("couriers"));
-            NeutralItems = new NeutralItems(GetJObject("neutralitems"));
+            Auth = SafeCreate(() => new Auth(GetJObject("auth")), new Auth());
+            Provider = SafeCreate(() => new Provider(GetJObject("provider")), new Provider());
+            Map = SafeCreate(() => new Map(GetJObject("map")), new Map());
+            Player = SafeCreate(() => new Player(GetJObject("player")), new Player());
+            Hero = SafeCreate(() => new Hero(GetJObject("hero")), new Hero());
+            Abilities = SafeCreate(() => new Abilities(GetJObject("abilities")), new Abilities());
+            Items = SafeCreate(() => new Items(GetJObject("items")), new Items());
+            Events = SafeCreate(() => new Events(GetJArray("events")), new Events());
+            Buildings = SafeCreate(() => new Buildings(GetJObject("buildings")), new Buildings());
+            League = SafeCreate(() => new League(GetJObject("league")), new League());
+            Draft = SafeCreate(() => new Draft(GetJObject("draft")), new Draft());
+            Wearables = SafeCreate(() => new Wearables(GetJObject("wearables")), new Wearables());
+            Minimap = SafeCreate(() => new Minimap(GetJObject("minimap")), new Minimap());
+            Roshan = SafeCreate(() => new Roshan(GetJObject("roshan")), new Roshan());
+            Couriers = SafeCreate(() => new Couriers(GetJObject("couriers")), new Couriers());
+            NeutralItems = SafeCreate(() => new NeutralItems(GetJObject("neutralitems")), new NeutralItems());
         }
     }
+        private static T SafeCreate<T>(Func<T> create, T fallback)
+        {
+            try
+            {
+                return create();
+            }
+            catch (Exception)
+            {
+                // Malformed data for this node only; leave it as an absent node.
+                return fallback;
+            }
+        }
+
 }
