@@ -60,6 +60,16 @@ namespace Dota2GSI
                     _previous_game_state = _current_game_state;
                     _current_game_state = value;
                     RaiseOnNewGameState(ref _current_game_state);
+                    if (value.Added != null && value.Added.HasValues)
+                    {
+                        foreach (var prop in value.Added.Properties())
+                        {
+                            if (prop.Value is JObject leafObject)
+                            {
+                                RaiseOnLeafChanged(prop.Name, leafObject);
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -85,6 +95,11 @@ namespace Dota2GSI
         /// Event for handing a newly received game state.
         /// </summary>
         public event NewGameStateHandler NewGameState = delegate { };
+
+        /// <summary>
+        /// Event for handing per-leaf changes from the Added block.
+        /// </summary>
+        public event Action<string, JObject> LeafChanged = delegate { };
 
         private readonly object gamestate_lock = new object();
 
@@ -267,6 +282,11 @@ namespace Dota2GSI
             RaiseEvent(NewGameState, game_state);
 
             _game_state_handler.OnNewGameState(game_state);
+        }
+
+        private void RaiseOnLeafChanged(string leafName, JObject leafValue)
+        {
+            LeafChanged?.Invoke(leafName, leafValue);
         }
 
         /// <summary>

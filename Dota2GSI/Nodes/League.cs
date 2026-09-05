@@ -1,5 +1,6 @@
 using Dota2GSI.Nodes.LeagueProvider;
 using Newtonsoft.Json.Linq;
+using Stream = Dota2GSI.Nodes.LeagueProvider.Stream;
 
 namespace Dota2GSI.Nodes
 {
