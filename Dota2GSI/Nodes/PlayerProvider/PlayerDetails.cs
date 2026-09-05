@@ -46,6 +46,11 @@ namespace Dota2GSI.Nodes.PlayerProvider
         public readonly string Name;
 
         /// <summary>
+        /// Player's pro name.
+        /// </summary>
+        public readonly string ProName;
+
+        /// <summary>
         /// Player's current activity state.
         /// </summary>
         public readonly PlayerActivity Activity;
@@ -322,6 +327,7 @@ namespace Dota2GSI.Nodes.PlayerProvider
             SteamID = GetString("steamid");
             AccountID = GetString("accountid");
             Name = GetString("name");
+            ProName = GetString("pro_name");
             Activity = GetEnum<PlayerActivity>("activity");
             Kills = GetInt("kills");
             Deaths = GetInt("deaths");
@@ -393,6 +399,7 @@ namespace Dota2GSI.Nodes.PlayerProvider
                 $"SteamID: {SteamID}, " +
                 $"AccountID: {AccountID}, " +
                 $"Name: {Name}, " +
+                $"ProName: {ProName}, " +
                 $"Activity: {Activity}, " +
                 $"Kills: {Kills}, " +
                 $"Deaths: {Deaths}, " +
@@ -460,6 +467,7 @@ namespace Dota2GSI.Nodes.PlayerProvider
                 SteamID.Equals(other.SteamID) &&
                 AccountID.Equals(other.AccountID) &&
                 Name.Equals(other.Name) &&
+                ProName.Equals(other.ProName) &&
                 Activity.Equals(other.Activity) &&
                 Kills.Equals(other.Kills) &&
                 Deaths.Equals(other.Deaths) &&
@@ -521,6 +529,7 @@ namespace Dota2GSI.Nodes.PlayerProvider
             hashCode = hashCode * -112730515 + SteamID.GetHashCode();
             hashCode = hashCode * -112730515 + AccountID.GetHashCode();
             hashCode = hashCode * -112730515 + Name.GetHashCode();
+            hashCode = hashCode * -112730515 + ProName.GetHashCode();
             hashCode = hashCode * -112730515 + Activity.GetHashCode();
             hashCode = hashCode * -112730515 + Kills.GetHashCode();
             hashCode = hashCode * -112730515 + Deaths.GetHashCode();

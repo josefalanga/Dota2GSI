@@ -224,6 +224,11 @@ namespace Dota2GSI.Nodes
         public readonly int DireWardPurchaseCooldown;
 
         /// <summary>
+        /// The Radiant team's win probability as a float (0..1). -1 when not provided.
+        /// </summary>
+        public readonly float RadiantWinChance;
+
+        /// <summary>
         /// The state of Roshan. (SPECTATOR ONLY)
         /// </summary>
         public readonly RoshanState RoshanState;
@@ -321,6 +326,7 @@ namespace Dota2GSI.Nodes
             CustomGameName = GetString("customgamename");
             RadiantWardPurchaseCooldown = GetInt("radiant_ward_purchase_cooldown");
             DireWardPurchaseCooldown = GetInt("dire_ward_purchase_cooldown");
+            RadiantWinChance = GetFloat("radiant_win_chance");
             // There is mentions of "radiant_win_chance" in game code, but no mention of "dire_win_chance".
             // Omitting "radiant_win_chance" since there is no dire counterpart.
             RoshanState = GetEnum<RoshanState>("roshan_state");
@@ -369,6 +375,7 @@ namespace Dota2GSI.Nodes
                 $"IsNightstalkerNight: {IsNightstalkerNight}, " +
                 $"RadiantScore: {RadiantScore}, " +
                 $"DireScore: {DireScore}, " +
+                $"RadiantWinChance: {RadiantWinChance}, " +
                 $"GameState: {GameState}, " +
                 $"IsPaused: {IsPaused}, " +
                 $"WinningTeam: {WinningTeam}, " +
@@ -412,6 +419,7 @@ namespace Dota2GSI.Nodes
                 IsNightstalkerNight.Equals(other.IsNightstalkerNight) &&
                 RadiantScore.Equals(other.RadiantScore) &&
                 DireScore.Equals(other.DireScore) &&
+                RadiantWinChance.Equals(other.RadiantWinChance) &&
                 GameState.Equals(other.GameState) &&
                 IsPaused.Equals(other.IsPaused) &&
                 WinningTeam.Equals(other.WinningTeam) &&
@@ -449,6 +457,7 @@ namespace Dota2GSI.Nodes
             hashCode = hashCode * -955669127 + IsNightstalkerNight.GetHashCode();
             hashCode = hashCode * -955669127 + RadiantScore.GetHashCode();
             hashCode = hashCode * -955669127 + DireScore.GetHashCode();
+            hashCode = hashCode * -955669127 + RadiantWinChance.GetHashCode();
             hashCode = hashCode * -955669127 + GameState.GetHashCode();
             hashCode = hashCode * -955669127 + IsPaused.GetHashCode();
             hashCode = hashCode * -955669127 + WinningTeam.GetHashCode();
