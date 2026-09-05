@@ -64,9 +64,11 @@ namespace Dota2GSI.Nodes
 
         internal Draft(JObject parsed_data = null) : base(parsed_data)
         {
-            ActiveTeam = GetInt("active_team");
+            // Real GSI emits "activeteam"/"activeteam_time_remaining"; fall back to
+            // legacy misspelled keys "active_team"/"activeteam_remaining_time".
+            ActiveTeam = GetInt(GetJToken("activeteam") != null ? "activeteam" : "active_team");
             Pick = GetBool("pick");
-            ActiveTeamRemainingTime = GetInt("activeteam_remaining_time");
+            ActiveTeamRemainingTime = GetInt(GetJToken("activeteam_time_remaining") != null ? "activeteam_time_remaining" : "activeteam_remaining_time");
             RadiantBonusTime = GetInt("radiant_bonus_time");
             DireBonusTime = GetInt("dire_bonus_time");
             RadiantPicks = GetStringArray("radiant_picks");
