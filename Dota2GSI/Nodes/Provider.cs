@@ -22,17 +22,17 @@ namespace Dota2GSI.Nodes
         /// </summary>
         public readonly int Version;
 
-        /// <summary>
-        /// Current timestamp.
+/// <summary>
+        /// Current timestamp as epoch seconds.
         /// </summary>
-        public readonly string TimeStamp;
+        public readonly long TimeStamp;
 
         internal Provider(JObject parsed_data = null) : base(parsed_data)
         {
             Name = GetString("name");
             AppID = GetInt("appid");
             Version = GetInt("version");
-            TimeStamp = GetString("timestamp");
+            TimeStamp = GetLong("timestamp");
         }
 
         /// <inheritdoc/>

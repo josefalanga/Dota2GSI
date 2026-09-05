@@ -57,10 +57,11 @@ SET(SOURCES
     Nodes/Wearables.cs
     Nodes/WearablesProvider/WearableItem.cs
     Nodes/WearablesProvider/PlayerWearables.cs
-    Nodes/NeutralItemsProvider/NeutralTierInfo.cs
     Nodes/NeutralItems.cs
-    Nodes/NeutralItemsProvider/TeamNeutralItems.cs
-    Nodes/NeutralItemsProvider/NeutralItem.cs
+    Nodes/NeutralItemsProvider/NeutralTier.cs
+    Nodes/NeutralItemsProvider/NeutralPlayer.cs
+    Nodes/NeutralItemsProvider/NeutralPlayerTier.cs
+    Nodes/MapProvider/Watcher.cs
     Nodes/Minimap.cs
     Nodes/Hero.cs
     Nodes/LeagueProvider/SelectionPriority.cs

@@ -16,9 +16,9 @@ namespace Dota2GSI.EventMessages
     /// <summary>
     /// Event for specific team's Neutral Items update. 
     /// </summary>
-    public class TeamNeutralItemsUpdated : TeamUpdateEvent<TeamNeutralItems>
+    public class TeamNeutralItemsUpdated : TeamUpdateEvent<NodeMap<int, NeutralPlayer>>
     {
-        public TeamNeutralItemsUpdated(TeamNeutralItems new_value, TeamNeutralItems previous_value, PlayerTeam team) : base(new_value, previous_value, team)
+        public TeamNeutralItemsUpdated(NodeMap<int, NeutralPlayer> new_value, NodeMap<int, NeutralPlayer> previous_value, PlayerTeam team) : base(new_value, previous_value, team)
         {
         }
     }

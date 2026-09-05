@@ -201,6 +201,16 @@ namespace Dota2GSI.Nodes.PlayerProvider
         public readonly int GoldSpentOnBuybacks;
 
         /// <summary>
+        /// The player's hero state (only present in spectator team rosters).
+        /// </summary>
+        public readonly TeamHeroDetails Hero;
+
+        /// <summary>
+        /// The player's abilities (only present in spectator team rosters).
+        /// </summary>
+        public readonly TeamAbilitiesDetails Abilities;
+
+        /// <summary>
         /// The amount of wards the player has purchased. (SPECTATOR ONLY)
         /// </summary>
         public readonly int WardsPurchased;
@@ -224,6 +234,86 @@ namespace Dota2GSI.Nodes.PlayerProvider
         /// The amount of camps stacked by the player. (SPECTATOR ONLY)
         /// </summary>
         public readonly int CampsStacked;
+
+        /// <summary>
+        /// The amount of gold earned by the player from summon kills.
+        /// </summary>
+        public readonly int GoldFromSummonKills;
+
+        /// <summary>
+        /// The amount of water runes activated by the player.
+        /// </summary>
+        public readonly int WaterRunesActivated;
+
+        /// <summary>
+        /// The amount of bounty runes activated by the player.
+        /// </summary>
+        public readonly int BountyRunesActivated;
+
+        /// <summary>
+        /// The amount of wisdom shrines taken by the player.
+        /// </summary>
+        public readonly int WisdomShrinesTaken;
+
+        /// <summary>
+        /// The amount of pre-reduction physical damage received by the player.
+        /// </summary>
+        public readonly int DamageReceivedPreReductionPhysical;
+
+        /// <summary>
+        /// The amount of pre-reduction magical damage received by the player.
+        /// </summary>
+        public readonly int DamageReceivedPreReductionMagical;
+
+        /// <summary>
+        /// The amount of pre-reduction pure damage received by the player.
+        /// </summary>
+        public readonly int DamageReceivedPreReductionPure;
+
+        /// <summary>
+        /// The amount of post-reduction physical damage received by the player.
+        /// </summary>
+        public readonly int DamageReceivedPostReductionPhysical;
+
+        /// <summary>
+        /// The amount of post-reduction magical damage received by the player.
+        /// </summary>
+        public readonly int DamageReceivedPostReductionMagical;
+
+        /// <summary>
+        /// The amount of post-reduction pure damage received by the player.
+        /// </summary>
+        public readonly int DamageReceivedPostReductionPure;
+
+        /// <summary>
+        /// The amount of pre-reduction physical damage dealt by the player.
+        /// </summary>
+        public readonly int DamageOutgoingPreReductionPhysical;
+
+        /// <summary>
+        /// The amount of pre-reduction magical damage dealt by the player.
+        /// </summary>
+        public readonly int DamageOutgoingPreReductionMagical;
+
+        /// <summary>
+        /// The amount of pre-reduction pure damage dealt by the player.
+        /// </summary>
+        public readonly int DamageOutgoingPreReductionPure;
+
+        /// <summary>
+        /// The amount of post-reduction physical damage dealt by the player.
+        /// </summary>
+        public readonly int DamageOutgoingPostReductionPhysical;
+
+        /// <summary>
+        /// The amount of post-reduction magical damage dealt by the player.
+        /// </summary>
+        public readonly int DamageOutgoingPostReductionMagical;
+
+        /// <summary>
+        /// The amount of post-reduction pure damage dealt by the player.
+        /// </summary>
+        public readonly int DamageOutgoingPostReductionPure;
 
         private Regex _victim_id_regex = new Regex(@"victimid_(\d+)");
 
@@ -275,6 +365,25 @@ namespace Dota2GSI.Nodes.PlayerProvider
             ItemGoldSpent = GetInt("item_gold_spent");
             GoldLostToDeath = GetInt("gold_lost_to_death");
             GoldSpentOnBuybacks = GetInt("gold_spent_on_buybacks");
+            GoldFromSummonKills = GetInt("gold_from_summon_kills");
+            WaterRunesActivated = GetInt("water_runes_activated");
+            BountyRunesActivated = GetInt("bounty_runes_activated");
+            WisdomShrinesTaken = GetInt("wisdom_shrines_taken");
+            DamageReceivedPreReductionPhysical = GetInt("damage_received_pre_reduction_physical");
+            DamageReceivedPreReductionMagical = GetInt("damage_received_pre_reduction_magical");
+            DamageReceivedPreReductionPure = GetInt("damage_received_pre_reduction_pure");
+            DamageReceivedPostReductionPhysical = GetInt("damage_received_post_reduction_physical");
+            DamageReceivedPostReductionMagical = GetInt("damage_received_post_reduction_magical");
+            DamageReceivedPostReductionPure = GetInt("damage_received_post_reduction_pure");
+            DamageOutgoingPreReductionPhysical = GetInt("damage_outgoing_pre_reduction_physical");
+            DamageOutgoingPreReductionMagical = GetInt("damage_outgoing_pre_reduction_magical");
+            DamageOutgoingPreReductionPure = GetInt("damage_outgoing_pre_reduction_pure");
+            DamageOutgoingPostReductionPhysical = GetInt("damage_outgoing_post_reduction_physical");
+            DamageOutgoingPostReductionMagical = GetInt("damage_outgoing_post_reduction_magical");
+            DamageOutgoingPostReductionPure = GetInt("damage_outgoing_post_reduction_pure");
+
+            Hero = new TeamHeroDetails(GetJObject("hero"));
+            Abilities = new TeamAbilitiesDetails(GetJObject("abilities"));
         }
 
         /// <inheritdoc/>
@@ -319,7 +428,23 @@ namespace Dota2GSI.Nodes.PlayerProvider
                 $"WardsPlaced: {WardsPlaced}, " +
                 $"WardsDestroyed: {WardsDestroyed}, " +
                 $"RunesActivated: {RunesActivated}, " +
-                $"CampsStacked: {CampsStacked}" +
+                $"CampsStacked: {CampsStacked}, " +
+                $"GoldFromSummonKills: {GoldFromSummonKills}, " +
+                $"WaterRunesActivated: {WaterRunesActivated}, " +
+                $"BountyRunesActivated: {BountyRunesActivated}, " +
+                $"WisdomShrinesTaken: {WisdomShrinesTaken}, " +
+                $"DamageReceivedPreReductionPhysical: {DamageReceivedPreReductionPhysical}, " +
+                $"DamageReceivedPreReductionMagical: {DamageReceivedPreReductionMagical}, " +
+                $"DamageReceivedPreReductionPure: {DamageReceivedPreReductionPure}, " +
+                $"DamageReceivedPostReductionPhysical: {DamageReceivedPostReductionPhysical}, " +
+                $"DamageReceivedPostReductionMagical: {DamageReceivedPostReductionMagical}, " +
+                $"DamageReceivedPostReductionPure: {DamageReceivedPostReductionPure}, " +
+                $"DamageOutgoingPreReductionPhysical: {DamageOutgoingPreReductionPhysical}, " +
+                $"DamageOutgoingPreReductionMagical: {DamageOutgoingPreReductionMagical}, " +
+                $"DamageOutgoingPreReductionPure: {DamageOutgoingPreReductionPure}, " +
+                $"DamageOutgoingPostReductionPhysical: {DamageOutgoingPostReductionPhysical}, " +
+                $"DamageOutgoingPostReductionMagical: {DamageOutgoingPostReductionMagical}, " +
+                $"DamageOutgoingPostReductionPure: {DamageOutgoingPostReductionPure}" +
                 $"]";
         }
 
@@ -370,7 +495,23 @@ namespace Dota2GSI.Nodes.PlayerProvider
                 WardsPlaced.Equals(other.WardsPlaced) &&
                 WardsDestroyed.Equals(other.WardsDestroyed) &&
                 RunesActivated.Equals(other.RunesActivated) &&
-                CampsStacked.Equals(other.CampsStacked);
+                CampsStacked.Equals(other.CampsStacked) &&
+                GoldFromSummonKills.Equals(other.GoldFromSummonKills) &&
+                WaterRunesActivated.Equals(other.WaterRunesActivated) &&
+                BountyRunesActivated.Equals(other.BountyRunesActivated) &&
+                WisdomShrinesTaken.Equals(other.WisdomShrinesTaken) &&
+                DamageReceivedPreReductionPhysical.Equals(other.DamageReceivedPreReductionPhysical) &&
+                DamageReceivedPreReductionMagical.Equals(other.DamageReceivedPreReductionMagical) &&
+                DamageReceivedPreReductionPure.Equals(other.DamageReceivedPreReductionPure) &&
+                DamageReceivedPostReductionPhysical.Equals(other.DamageReceivedPostReductionPhysical) &&
+                DamageReceivedPostReductionMagical.Equals(other.DamageReceivedPostReductionMagical) &&
+                DamageReceivedPostReductionPure.Equals(other.DamageReceivedPostReductionPure) &&
+                DamageOutgoingPreReductionPhysical.Equals(other.DamageOutgoingPreReductionPhysical) &&
+                DamageOutgoingPreReductionMagical.Equals(other.DamageOutgoingPreReductionMagical) &&
+                DamageOutgoingPreReductionPure.Equals(other.DamageOutgoingPreReductionPure) &&
+                DamageOutgoingPostReductionPhysical.Equals(other.DamageOutgoingPostReductionPhysical) &&
+                DamageOutgoingPostReductionMagical.Equals(other.DamageOutgoingPostReductionMagical) &&
+                DamageOutgoingPostReductionPure.Equals(other.DamageOutgoingPostReductionPure);
         }
 
         /// <inheritdoc/>
@@ -416,7 +557,130 @@ namespace Dota2GSI.Nodes.PlayerProvider
             hashCode = hashCode * -112730515 + WardsDestroyed.GetHashCode();
             hashCode = hashCode * -112730515 + RunesActivated.GetHashCode();
             hashCode = hashCode * -112730515 + CampsStacked.GetHashCode();
+            hashCode = hashCode * -112730515 + GoldFromSummonKills.GetHashCode();
+            hashCode = hashCode * -112730515 + WaterRunesActivated.GetHashCode();
+            hashCode = hashCode * -112730515 + BountyRunesActivated.GetHashCode();
+            hashCode = hashCode * -112730515 + WisdomShrinesTaken.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageReceivedPreReductionPhysical.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageReceivedPreReductionMagical.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageReceivedPreReductionPure.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageReceivedPostReductionPhysical.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageReceivedPostReductionMagical.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageReceivedPostReductionPure.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageOutgoingPreReductionPhysical.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageOutgoingPreReductionMagical.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageOutgoingPreReductionPure.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageOutgoingPostReductionPhysical.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageOutgoingPostReductionMagical.GetHashCode();
+            hashCode = hashCode * -112730515 + DamageOutgoingPostReductionPure.GetHashCode();
             return hashCode;
+        }
+    }
+
+    /// <summary>
+    /// Hero summary for a player in a spectator team roster, nested under
+    /// <c>player.teamN.playerM.hero</c>. Includes liveness and buyback state
+    /// that the top-level local-player hero node does not provide.
+    /// </summary>
+    public class TeamHeroDetails : Node
+    {
+        /// <summary>Hero id (0 when not picked yet).</summary>
+        public readonly int ID;
+        /// <summary>Hero unit name (e.g. "npc_dota_hero_antimage").</summary>
+        public readonly string Name;
+        /// <summary>Whether the hero is currently alive.</summary>
+        public readonly bool Alive;
+        /// <summary>Seconds until the hero respawns.</summary>
+        public readonly int RespawnSeconds;
+        /// <summary>Current buyback cost in gold.</summary>
+        public readonly int BuybackCost;
+        /// <summary>Seconds of remaining buyback cooldown.</summary>
+        public readonly int BuybackCooldown;
+        /// <summary>Current health as a percent (0..100).</summary>
+        public readonly int HealthPercent;
+        /// <summary>Current mana as a percent (0..100).</summary>
+        public readonly int ManaPercent;
+
+        internal TeamHeroDetails(JObject parsed_data = null) : base(parsed_data)
+        {
+            ID = GetInt("id");
+            Name = GetString("name");
+            Alive = GetBool("alive");
+            RespawnSeconds = GetInt("respawn_seconds");
+            BuybackCost = GetInt("buyback_cost");
+            BuybackCooldown = GetInt("buyback_cooldown");
+            HealthPercent = GetInt("health_percent");
+            ManaPercent = GetInt("mana_percent");
+        }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return $"[" +
+                $"ID: {ID}, " +
+                $"Name: {Name}, " +
+                $"Alive: {Alive}, " +
+                $"RespawnSeconds: {RespawnSeconds}, " +
+                $"BuybackCost: {BuybackCost}, " +
+                $"BuybackCooldown: {BuybackCooldown}, " +
+                $"HealthPercent: {HealthPercent}, " +
+                $"ManaPercent: {ManaPercent}" +
+                $"]";
+        }
+    }
+
+    /// <summary>
+    /// Abilities summary for a player in a spectator team roster, nested under
+    /// <c>player.teamN.playerM.abilities</c>. Exposes the ultimate (ability10-12)
+    /// readiness — the key team-fight signal for a spectator view.
+    /// </summary>
+    public class TeamAbilitiesDetails : Node
+    {
+        /// <summary>The ultimate ability unit name.</summary>
+        public readonly string UltimateName;
+        /// <summary>Ultimate remaining cooldown seconds (0 when ready).</summary>
+        public readonly int UltimateCooldown;
+        /// <summary>Whether the ultimate can currently be cast.</summary>
+        public readonly bool UltimateCanCast;
+
+        internal TeamAbilitiesDetails(JObject parsed_data = null) : base(parsed_data)
+        {
+            var ultimateName = string.Empty;
+            var ultimateCooldown = -1;
+            var ultimateCanCast = false;
+
+            if (parsed_data != null)
+            {
+                // Ultimates live in the 10/11/12 slots; prefer the first populated.
+                for (int i = 10; i <= 12; i++)
+                {
+                    if (parsed_data["ability" + i] is not JObject obj)
+                        continue;
+                    var name = obj["name"]?.ToString() ?? string.Empty;
+                    if (string.IsNullOrEmpty(name))
+                        continue;
+                    ultimateName = name;
+                    var cd = obj["cooldown"];
+                    ultimateCooldown = cd != null ? Convert.ToInt32(cd.ToString()) : -1;
+                    var can = obj["can_cast"];
+                    ultimateCanCast = can != null && can.ToObject<bool>();
+                    break;
+                }
+            }
+
+            UltimateName = ultimateName;
+            UltimateCooldown = ultimateCooldown;
+            UltimateCanCast = ultimateCanCast;
+        }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            return $"[" +
+                $"UltimateName: {UltimateName}, " +
+                $"UltimateCooldown: {UltimateCooldown}, " +
+                $"UltimateCanCast: {UltimateCanCast}" +
+                $"]";
         }
     }
 }
