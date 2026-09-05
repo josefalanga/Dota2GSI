@@ -88,6 +88,7 @@ namespace Dota2GSI
             string eventTypeName = typeof(MessageType).Name;
             string playerIds = ExtractPlayerIds(message);
             // If no discriminating player/killer/entity ids, skip dedup entirely
+            // Return null so Broadcast never touches the cache for no-id events
             if (string.IsNullOrEmpty(playerIds))
             {
                 return null;
@@ -180,23 +181,28 @@ namespace Dota2GSI
             {
                 // --- Dedup check ---
                 string dedupKey = BuildDedupKey(message);
-                // If null (event has no discriminating ids), always dispatch
-                if (dedupKey != null && _recentKeys.Contains(dedupKey))
+                // Guard: if no discriminating ids, never touch the cache (prevents
+                // trailing-pipe keys like "type|" from suppressing legitimate events).
+                if (dedupKey == null || dedupKey == "")
+                {
+                    // Always dispatch events that carry no discriminating player/killer/entity ids.
+                    goto dispatch_event;
+                }
+                if (_recentKeys.Contains(dedupKey))
                 {
                     // Same key seen within window — skip dispatch to avoid double-fire
                     return;
                 }
-                if (dedupKey != null)
+                // ---------- store new key in ring buffer ----------
+                _recentKeys.Add(dedupKey);
+                _keyQueue.Enqueue(dedupKey);
+                if (_keyQueue.Count > DedupWindowSize)
                 {
-                    _recentKeys.Add(dedupKey);
-                    _keyQueue.Enqueue(dedupKey);
-                    if (_keyQueue.Count > DedupWindowSize)
-                    {
-                        string oldKey = _keyQueue.Dequeue();
-                        _recentKeys.Remove(oldKey);
-                    }
+                    string oldKey = _keyQueue.Dequeue();
+                    _recentKeys.Remove(oldKey);
                 }
                 // ----------------
+dispatch_event:
 
                 if (subscriptions.ContainsKey(event_type))
                 {
