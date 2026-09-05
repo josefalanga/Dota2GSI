@@ -120,6 +120,14 @@ namespace Dota2GSI
                 return _previous_game_state;
             }
         }
+        /// <summary>
+        /// The original parsed JObject.
+        /// </summary>
+        public JObject RawJson => _ParsedData;
+        /// <summary>
+        /// The added block containing newly-added sections since the last tick.
+        /// </summary>
+        public JObject Added => _added;
 
         /// <summary>
         /// Helper variable,<br/>
@@ -223,6 +231,7 @@ namespace Dota2GSI
         private FullTeamDetails _radiant_team_details;
         private FullTeamDetails _dire_team_details;
         private FullTeamDetails _neutral_team_details;
+        private JObject _added;
 
         /// <summary>
         /// Creates a GameState instance based on the given json data.
@@ -230,6 +239,7 @@ namespace Dota2GSI
         /// <param name="parsed_data">The parsed json data.</param>
         public GameState(JObject parsed_data = null) : base(parsed_data)
         {
+            _added = parsed_data?.Value<JObject>("added");
             Auth = new Auth(GetJObject("auth"));
             Provider = new Provider(GetJObject("provider"));
             Map = new Map(GetJObject("map"));
