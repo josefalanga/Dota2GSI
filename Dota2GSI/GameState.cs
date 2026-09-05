@@ -114,7 +114,17 @@ namespace Dota2GSI
             {
                 if (_previous_game_state == null)
                 {
-                    _previous_game_state = new GameState(GetJObject("previously"));
+                    JObject previously = GetJObject("previously");
+
+                    if (previously == null)
+                    {
+                        // No "previously" block in this payload (first tick).
+                        // Do not cache an empty state: return a transient one so a
+                        // later payload containing "previously" is parsed correctly.
+                        return new GameState();
+                    }
+
+                    _previous_game_state = new GameState(previously);
                 }
 
                 return _previous_game_state;

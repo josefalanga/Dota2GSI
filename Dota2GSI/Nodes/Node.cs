@@ -20,6 +20,8 @@ namespace Dota2GSI.Nodes
         /// Has this node been used to successfully read a value from json.
         /// </summary>
         private bool _successfully_retrieved_any_value = false;
+        private static readonly JTokenEqualityComparer _jtokenEqualityComparer = new JTokenEqualityComparer();
+
 
         internal Node(JObject parsed_data)
         {
@@ -233,8 +235,7 @@ namespace Dota2GSI.Nodes
             }
 
             return obj is Node other &&
-                _ParsedData != null &&
-                _ParsedData.Equals(other._ParsedData) &&
+                JToken.DeepEquals(_ParsedData, other._ParsedData) &&
                 _successfully_retrieved_any_value.Equals(other._successfully_retrieved_any_value);
         }
 
@@ -242,7 +243,7 @@ namespace Dota2GSI.Nodes
         public override int GetHashCode()
         {
             int hashCode = 898763153;
-            hashCode = hashCode * -405816372 + _ParsedData.GetHashCode();
+            hashCode = hashCode * -405816372 + (_ParsedData != null ? _jtokenEqualityComparer.GetHashCode(_ParsedData) : 0);
             hashCode = hashCode * -405816372 + _successfully_retrieved_any_value.GetHashCode();
             return hashCode;
         }
