@@ -1,4 +1,4 @@
-﻿using Dota2GSI.Utils;
+using Dota2GSI.Utils;
 using System;
 using System.IO;
 
@@ -9,9 +9,6 @@ namespace Dota2GSI
     /// </summary>
     public class Dota2GSIFile
     {
-        // One-shot guard so the experimental-mode warning prints at most once per process.
-        private static bool _experimental_warned = false;
-
         /// <summary>
         /// Attempts to create a Game State Integration configuraion file.<br/>
         /// The configuration will target <c>http://localhost:{port}/</c> address.<br/>
@@ -34,23 +31,6 @@ namespace Dota2GSI
         /// <param name="uri">The URI for your integration.</param>
         /// <returns>Returns true on success, false otherwise.</returns>
         public static bool CreateFile(string name, string uri)
-        {
-            return CreateFile(name, uri, false);
-        }
-
-        /// <summary>
-        /// Attempts to create a Game State Integration configuraion file with optional experimental block.<br/>
-        /// When <paramref name="experimental"/> is true the generated cfg includes Valve's experimental
-        /// GSI flags (full_units, full_hero_kills, output precision). This materially increases the volume
-        /// of data sent per tick; left opt-in to preserve current behavior. A one-time warning is emitted
-        /// to the console when enabled. When false, output is byte-identical to the legacy generator.
-        /// Returns true on success, false otherwise.
-        /// </summary>
-        /// <param name="name">The name of your integration.</param>
-        /// <param name="uri">The URI for your integration.</param>
-        /// <param name="experimental">When true, adds the experimental GSI block.</param>
-        /// <returns>Returns true on success, false otherwise.</returns>
-        public static bool CreateFile(string name, string uri, bool experimental)
         {
             string game_path = SteamUtils.GetGamePath(570);
 
@@ -87,25 +67,6 @@ namespace Dota2GSI
                     gsi_configuration.Items["throttle"] = "0.1";
                     gsi_configuration.Items["heartbeat"] = "10.0";
                     gsi_configuration.Children["data"] = provider_configuration;
-
-                    if (experimental && !_experimental_warned)
-                    {
-                        Console.WriteLine("[Dota2GSI] Experimental GSI block enabled: tick data volume will increase substantially.");
-                        _experimental_warned = true;
-                    }
-
-                    if (experimental)
-                    {
-                        ACF experimental_output = new ACF();
-                        experimental_output.Items["precision"] = "1";
-
-                        ACF experimental_block = new ACF();
-                        experimental_block.Items["full_units"] = "1";
-                        experimental_block.Items["full_hero_kills"] = "1";
-                        experimental_block.Children["output"] = experimental_output;
-
-                        gsi_configuration.Children["experimental"] = experimental_block;
-                    }
 
                     ACF gsi = new ACF();
                     gsi.Children[$"{name} Integration Configuration"] = gsi_configuration;

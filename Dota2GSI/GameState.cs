@@ -107,20 +107,6 @@ namespace Dota2GSI
         public readonly NeutralItems NeutralItems;
 
         /// <summary>
-        /// Experimental block: detailed per-unit information keyed by unit id.<br/>
-        /// Only populated when the experimental GSI cfg block is enabled.<br/>
-        /// Null when the block is absent from the payload.
-        /// </summary>
-        public readonly FullUnits FullUnits;
-
-        /// <summary>
-        /// Experimental block: ordered list of hero kill records.<br/>
-        /// Only populated when the experimental GSI cfg block is enabled.<br/>
-        /// Null when the block is absent from the payload.
-        /// </summary>
-        public readonly FullHeroKills FullHeroKills;
-
-        /// <summary>
         /// A previous GameState.
         /// </summary>
         public GameState Previously
@@ -281,18 +267,6 @@ namespace Dota2GSI
             Roshan = SafeCreate(() => new Roshan(GetJObject("roshan")), new Roshan());
             Couriers = SafeCreate(() => new Couriers(GetJObject("couriers")), new Couriers());
             NeutralItems = SafeCreate(() => new NeutralItems(GetJObject("neutralitems")), new NeutralItems());
-
-            var full_units_obj = GetJObject("full_units");
-            if (full_units_obj != null)
-            {
-                FullUnits = new FullUnits(full_units_obj);
-            }
-
-            var full_hero_kills_arr = GetJArray("full_hero_kills");
-            if (full_hero_kills_arr != null)
-            {
-                FullHeroKills = new FullHeroKills(full_hero_kills_arr);
-            }
         }
 
         private static T SafeCreate<T>(Func<T> create, T fallback)

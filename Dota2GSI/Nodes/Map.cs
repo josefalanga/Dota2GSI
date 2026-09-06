@@ -256,17 +256,17 @@ namespace Dota2GSI.Nodes
         /// <summary>
         /// The Radiant team's glyph cooldown.
         /// </summary>
-        public readonly int RadiantGlyphCooldown;
+        public readonly float RadiantGlyphCooldown;
 
         /// <summary>
         /// The Dire team's glyph cooldown.
         /// </summary>
-        public readonly int DireGlyphCooldown;
+        public readonly float DireGlyphCooldown;
 
         /// <summary>
         /// The Radiant team's scan cooldown.
         /// </summary>
-        public readonly int RadiantScanCooldown;
+        public readonly float RadiantScanCooldown;
 
         /// <summary>
         /// The Radiant team's scan charges.
@@ -276,7 +276,7 @@ namespace Dota2GSI.Nodes
         /// <summary>
         /// The Dire team's scan cooldown.
         /// </summary>
-        public readonly int DireScanCooldown;
+        public readonly float DireScanCooldown;
 
         /// <summary>
         /// The Dire team's scan charges.
@@ -336,11 +336,11 @@ namespace Dota2GSI.Nodes
             TormentorState = GetString("tormentor_state");
             TormentorStateEndTime = GetInt("tormentor_state_end_seconds");
             TormentorStateLocation = GetString("tormentor_state_location");
-            RadiantGlyphCooldown = GetInt("radiant_glyph_cooldown");
-            DireGlyphCooldown = GetInt("dire_glyph_cooldown");
-            RadiantScanCooldown = GetInt("radiant_scan_cooldown");
+            RadiantGlyphCooldown = GetFloat("radiant_glyph_cooldown");
+            DireGlyphCooldown = GetFloat("dire_glyph_cooldown");
+            RadiantScanCooldown = GetFloat("radiant_scan_cooldown");
             RadiantScanCharges = GetInt("radiant_scan_charges");
-            DireScanCooldown = GetInt("dire_scan_cooldown");
+            DireScanCooldown = GetFloat("dire_scan_cooldown");
             DireScanCharges = GetInt("dire_scan_charges");
             RadiantWisdomShrine = GetBool("radiant_wisdom_shrine");
             DireWisdomShrine = GetBool("dire_wisdom_shrine");
