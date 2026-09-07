@@ -3,6 +3,8 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using System.Net;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 
@@ -117,6 +119,7 @@ namespace Dota2GSI
         private bool _is_running = false;
         private int _port;
         private string _uri;
+        private string _auth_token;
         private HttpListener _http_listener;
         private AutoResetEvent _wait_for_connection = new AutoResetEvent(false);
         private GameState _previous_game_state = new GameState();
@@ -188,6 +191,19 @@ namespace Dota2GSI
         }
 
         /// <summary>
+        /// A GameStateListener that listens for connections on http://localhost:<c>port</c>/,
+        /// validating every payload's <c>auth.token</c> against <paramref name="authToken"/>.
+        /// When <paramref name="authToken"/> is null or empty no validation happens
+        /// (backward-compatible with the accept-all behaviour).
+        /// </summary>
+        /// <param name="port">The port to listen on.</param>
+        /// <param name="authToken">The expected GSI auth token, or null/empty to accept any.</param>
+        public GameStateListener(int port, string authToken) : this(port)
+        {
+            _auth_token = authToken;
+        }
+
+        /// <summary>
         /// A GameStateListener that listens for connections to the specified URI.
         /// </summary>
         /// <param name="URI">The URI to listen to.</param>
@@ -210,6 +226,19 @@ namespace Dota2GSI
             _uri = URI;
             _http_listener = new HttpListener();
             _http_listener.Prefixes.Add(URI);
+        }
+
+        /// <summary>
+        /// A GameStateListener that listens for connections to the specified URI,
+        /// validating every payload's <c>auth.token</c> against <paramref name="authToken"/>.
+        /// When <paramref name="authToken"/> is null or empty no validation happens
+        /// (backward-compatible with the accept-all behaviour).
+        /// </summary>
+        /// <param name="URI">The URI to listen to.</param>
+        /// <param name="authToken">The expected GSI auth token, or null/empty to accept any.</param>
+        public GameStateListener(string URI, string authToken) : this(URI)
+        {
+            _auth_token = authToken;
         }
 
         /// <summary>
@@ -292,14 +321,6 @@ namespace Dota2GSI
                     }
                 }
 
-                NewRawGameState(json_data);
-                using (HttpListenerResponse response = context.Response)
-                {
-                    response.StatusCode = (int)HttpStatusCode.OK;
-                    response.StatusDescription = "OK";
-                    response.Close();
-                }
-
                 JObject parsed_data;
                 try
                 {
@@ -307,8 +328,35 @@ namespace Dota2GSI
                 }
                 catch (Exception)
                 {
-                    // Malformed top-level JSON; ignore this tick and keep listening.
+                    // Malformed top-level JSON; reject this tick and keep listening.
+                    using (HttpListenerResponse response = context.Response)
+                    {
+                        response.StatusCode = (int)HttpStatusCode.BadRequest;
+                        response.Close();
+                    }
                     return;
+                }
+
+                // Authenticate before accepting: when an expected token is set, any
+                // payload whose auth.token does not match is rejected outright and
+                // never surfaces as a game state (or to the raw-state subscribers).
+                if (!string.IsNullOrEmpty(_auth_token) &&
+                    !TokenMatches(parsed_data["auth"]?["token"]?.ToString(), _auth_token))
+                {
+                    using (HttpListenerResponse response = context.Response)
+                    {
+                        response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                        response.Close();
+                    }
+                    return;
+                }
+
+                NewRawGameState(json_data);
+                using (HttpListenerResponse response = context.Response)
+                {
+                    response.StatusCode = (int)HttpStatusCode.OK;
+                    response.StatusDescription = "OK";
+                    response.Close();
                 }
 
                 CurrentGameState = new GameState(parsed_data);
@@ -321,6 +369,20 @@ namespace Dota2GSI
             {
                 // Never let an exception escape the tick handler.
             }
+        }
+
+        /// <summary>
+        /// Compares two token strings in constant time (length-independent, via a
+        /// SHA-256 digest) so the auth check does not leak token length or prefix
+        /// information through timing.
+        /// </summary>
+        private static bool TokenMatches(string supplied, string expected)
+        {
+            if (supplied is null) return false;
+            using var sha = SHA256.Create();
+            var suppliedHash = sha.ComputeHash(Encoding.UTF8.GetBytes(supplied));
+            var expectedHash = sha.ComputeHash(Encoding.UTF8.GetBytes(expected));
+            return CryptographicOperations.FixedTimeEquals(suppliedHash, expectedHash);
         }
 
         private void RaiseOnNewGameState(ref GameState game_state)
