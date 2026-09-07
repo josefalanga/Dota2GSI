@@ -120,6 +120,7 @@ namespace Dota2GSI
         private int _port;
         private string _uri;
         private string _auth_token;
+        private Func<string, bool> _token_validator;
         private HttpListener _http_listener;
         private AutoResetEvent _wait_for_connection = new AutoResetEvent(false);
         private GameState _previous_game_state = new GameState();
@@ -204,6 +205,19 @@ namespace Dota2GSI
         }
 
         /// <summary>
+        /// A GameStateListener that listens for connections on http://localhost:<c>port</c>/,
+        /// delegating every payload's <c>auth.token</c> validation to
+        /// <paramref name="tokenValidator"/>. When <paramref name="tokenValidator"/> is null
+        /// no validation happens (backward-compatible with the accept-all behaviour).
+        /// </summary>
+        /// <param name="port">The port to listen on.</param>
+        /// <param name="tokenValidator">Returns true when the supplied token is accepted.</param>
+        public GameStateListener(int port, Func<string, bool> tokenValidator) : this(port)
+        {
+            _token_validator = tokenValidator;
+        }
+
+        /// <summary>
         /// A GameStateListener that listens for connections to the specified URI.
         /// </summary>
         /// <param name="URI">The URI to listen to.</param>
@@ -239,6 +253,19 @@ namespace Dota2GSI
         public GameStateListener(string URI, string authToken) : this(URI)
         {
             _auth_token = authToken;
+        }
+
+        /// <summary>
+        /// A GameStateListener that listens for connections to the specified URI,
+        /// delegating every payload's <c>auth.token</c> validation to
+        /// <paramref name="tokenValidator"/>. When <paramref name="tokenValidator"/> is null
+        /// no validation happens (backward-compatible with the accept-all behaviour).
+        /// </summary>
+        /// <param name="URI">The URI to listen to.</param>
+        /// <param name="tokenValidator">Returns true when the supplied token is accepted.</param>
+        public GameStateListener(string URI, Func<string, bool> tokenValidator) : this(URI)
+        {
+            _token_validator = tokenValidator;
         }
 
         /// <summary>
@@ -337,11 +364,11 @@ namespace Dota2GSI
                     return;
                 }
 
-                // Authenticate before accepting: when an expected token is set, any
-                // payload whose auth.token does not match is rejected outright and
-                // never surfaces as a game state (or to the raw-state subscribers).
-                if (!string.IsNullOrEmpty(_auth_token) &&
-                    !TokenMatches(parsed_data["auth"]?["token"]?.ToString(), _auth_token))
+                // Authenticate before accepting: when a validator or expected token is set,
+                // any payload that fails it is rejected outright and never surfaces
+                // as a game state (or to the raw-state subscribers).
+                var suppliedToken = parsed_data["auth"]?["token"]?.ToString();
+                if (!IsTokenAuthorized(suppliedToken))
                 {
                     using (HttpListenerResponse response = context.Response)
                     {
@@ -369,6 +396,21 @@ namespace Dota2GSI
             {
                 // Never let an exception escape the tick handler.
             }
+        }
+
+        /// <summary>
+        /// True when a supplied auth token is accepted. Precedence: an explicit
+        /// <see cref="_token_validator"/> delegate wins; else a configured
+        /// <see cref="_auth_token"/> string is compared in constant time; else
+        /// (no validator and no token) everything is accepted.
+        /// </summary>
+        private bool IsTokenAuthorized(string supplied)
+        {
+            if (_token_validator != null)
+                return _token_validator(supplied);
+            if (!string.IsNullOrEmpty(_auth_token))
+                return TokenMatches(supplied, _auth_token);
+            return true;
         }
 
         /// <summary>

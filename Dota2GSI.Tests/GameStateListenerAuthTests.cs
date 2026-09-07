@@ -75,5 +75,23 @@ namespace Dota2GSI.Tests
             Assert.True(TryPost(listener.Port, Payload(clockTime: 5, token: "anything"), out var status));
             Assert.Equal(200, status);
         }
+
+        [Fact]
+        public void Listener_DelegatesValidation_ToPredicate()
+        {
+            var accepted = 0;
+            using var listener = new GameStateListener(GetFreePort(), token => token == "delegated-token");
+            listener.NewGameState += _ => Interlocked.Increment(ref accepted);
+            listener.Start();
+
+            // Predicate rejects a mismatch -> 401, no state.
+            Assert.False(TryPost(listener.Port, Payload(clockTime: 7, token: "nope"), out var status));
+            Assert.Equal(401, status);
+
+            // Predicate accepts -> 200, state surfaces.
+            Assert.True(TryPost(listener.Port, Payload(clockTime: 8, token: "delegated-token"), out status));
+            Assert.Equal(200, status);
+            Assert.True(SpinWait.SpinUntil(() => accepted >= 1, TimeSpan.FromSeconds(5)), "accepted frame never surfaced");
+        }
     }
 }
