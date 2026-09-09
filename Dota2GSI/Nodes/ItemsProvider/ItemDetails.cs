@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -52,11 +53,19 @@ namespace Dota2GSI.Nodes.ItemsProvider
 
         internal ItemDetails(JObject parsed_data = null) : base(parsed_data)
         {
+            // GSI emits slot0..slot8 in order, but a player with gaps (e.g. an
+            // item in the backpack while a main slot is empty) can be sent
+            // with varying key presence across gs payloads. Order the parsed
+            // items by their slot number so the 6 inventory slots and the 3
+            // backpack slots stay stable for consumers that slice [0..6)/[6..9).
+            var slots = new List<System.Collections.Generic.KeyValuePair<int, Item>>(9);
             GetMatchingObjects(parsed_data, _slot_regex, (Match match, JObject obj) =>
             {
-                Item item = new Item(obj);
-                Inventory.Add(item);
+slots.Add(new System.Collections.Generic.KeyValuePair<int, Item>(
+                int.Parse(match.Groups[1].Value), new Item(obj, int.Parse(match.Groups[1].Value))));
             });
+            foreach (var kv in slots.OrderBy(kv => kv.Key))
+                Inventory.Add(kv.Value);
 
             GetMatchingObjects(parsed_data, _stash_regex, (Match match, JObject obj) =>
             {

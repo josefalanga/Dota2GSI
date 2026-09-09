@@ -134,12 +134,19 @@ namespace Dota2GSI.Nodes.ItemsProvider
         /// </summary>
         public readonly int ChargeCooldown;
 
-        /// <summary>
+/// <summary>
         /// The amount of charges on this item.
         /// </summary>
         public readonly int Charges;
 
-        internal Item(JObject parsed_data = null) : base(parsed_data)
+        /// <summary>
+        /// The inventory slot index this item sits in (0..8: 0..5 main, 6..8
+        /// backpack). -1 when the item is not in a numbered slot (teleport,
+        /// neutral, stash, courier).
+        /// </summary>
+        public readonly int SlotIndex;
+
+        internal Item(JObject parsed_data = null, int slotIndex = -1) : base(parsed_data)
         {
             Name = GetString("name");
             Purchaser = GetInt("purchaser");
@@ -153,7 +160,8 @@ namespace Dota2GSI.Nodes.ItemsProvider
             AbilityCharges = GetInt("ability_charges");
             MaxCharges = GetInt("max_charges");
             ChargeCooldown = GetInt("charge_cooldown");
-            Charges = GetInt("charges");
+Charges = GetInt("charges");
+            SlotIndex = slotIndex;
         }
 
         /// <inheritdoc/>
