@@ -348,8 +348,9 @@ namespace Dota2GSI.Nodes.HeroProvider
             {
                 foreach (var property in permanent_buffs.Properties())
                 {
+                    // GSI sends each buff as a nested object: {"stack_count": N}.
                     int stack_count;
-                    if (int.TryParse(property.Value.ToString(), out stack_count))
+                    if (property.Value is JObject buff && int.TryParse(buff["stack_count"]?.ToString(), out stack_count))
                     {
                         PermanentBuffs.Add(property.Name, stack_count);
                     }
