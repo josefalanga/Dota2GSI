@@ -57,7 +57,7 @@ namespace Dota2GSI.Nodes
             IsAlive = GetBool("alive");
             SpawnPhase = GetInt("spawn_phase");
             PhaseTimeRemaining = GetFloat("phase_time_remaining");
-            Rotation = GetInt("yaw");
+            Rotation = (int)GetFloat("yaw");
             Drops = new ItemsDrop(GetJObject("items_drop"));
         }
 

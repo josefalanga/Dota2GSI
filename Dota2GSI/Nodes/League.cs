@@ -15,6 +15,11 @@ namespace Dota2GSI.Nodes
         Undefined = -1,
 
         /// <summary>
+        /// Best of 1.
+        /// </summary>
+        BO1,
+
+        /// <summary>
         /// Best of 2.
         /// </summary>
         BO2,
@@ -133,7 +138,7 @@ namespace Dota2GSI.Nodes
         /// <summary>
         /// The note ID of the league.
         /// </summary>
-        public readonly int LeagueNoteID;
+        public readonly int LeagueNodeID;
 
         /// <summary>
         /// The Radiant team information of the league.
@@ -191,7 +196,7 @@ namespace Dota2GSI.Nodes
             RegistrationPeriod = GetInt("registration_period");
             BasePrizePool = GetInt("base_prize_pool");
             TotalPrizePool = GetInt("total_prize_pool");
-            LeagueNoteID = GetInt("league_node_id");
+            LeagueNodeID = GetInt("league_node_id");
             RadiantTeam = new LeagueTeam(GetJObject("radiant"));
             DireTeam = new LeagueTeam(GetJObject("dire"));
             SeriesID = GetInt("series_id");
@@ -235,7 +240,7 @@ namespace Dota2GSI.Nodes
                 $"RegistrationPeriod: {RegistrationPeriod}, " +
                 $"BasePrizePool: {BasePrizePool}, " +
                 $"TotalPrizePool: {TotalPrizePool}, " +
-                $"LeagueNoteID: {LeagueNoteID}, " +
+                $"LeagueNodeID: {LeagueNodeID}, " +
                 $"RadiantTeam: {RadiantTeam}, " +
                 $"DireTeam: {DireTeam}, " +
                 $"SeriesID: {SeriesID}, " +
@@ -274,7 +279,7 @@ namespace Dota2GSI.Nodes
                 RegistrationPeriod.Equals(other.RegistrationPeriod) &&
                 BasePrizePool.Equals(other.BasePrizePool) &&
                 TotalPrizePool.Equals(other.TotalPrizePool) &&
-                LeagueNoteID.Equals(other.LeagueNoteID) &&
+                LeagueNodeID.Equals(other.LeagueNodeID) &&
                 RadiantTeam.Equals(other.RadiantTeam) &&
                 DireTeam.Equals(other.DireTeam) &&
                 SeriesID.Equals(other.SeriesID) &&
@@ -307,7 +312,7 @@ namespace Dota2GSI.Nodes
             hashCode = hashCode * -43571779 + RegistrationPeriod.GetHashCode();
             hashCode = hashCode * -43571779 + BasePrizePool.GetHashCode();
             hashCode = hashCode * -43571779 + TotalPrizePool.GetHashCode();
-            hashCode = hashCode * -43571779 + LeagueNoteID.GetHashCode();
+            hashCode = hashCode * -43571779 + LeagueNodeID.GetHashCode();
             hashCode = hashCode * -43571779 + RadiantTeam.GetHashCode();
             hashCode = hashCode * -43571779 + DireTeam.GetHashCode();
             hashCode = hashCode * -43571779 + SeriesID.GetHashCode();

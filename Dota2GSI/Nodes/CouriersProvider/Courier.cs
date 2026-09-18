@@ -74,7 +74,7 @@ namespace Dota2GSI.Nodes.CouriersProvider
             IsAlive = GetBool("alive");
             RemainingRespawnTime = GetInt("respawn_time_remaining");
             Location = new Vector2D(GetInt("xpos"), GetInt("ypos"));
-            Rotation = GetInt("yaw");
+            Rotation = (int)GetFloat("yaw");
             OwnerID = GetInt("owner");
             HasFlyingUpgrade = GetBool("flying_upgrade");
             IsShielded = GetBool("shield");

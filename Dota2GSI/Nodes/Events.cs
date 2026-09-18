@@ -17,19 +17,31 @@ namespace Dota2GSI.Nodes
         /// </summary>
         public int Count { get { return _events.Count; } }
 
-        internal Events(JArray parsed_data = null) : base()
+        internal Events(JToken parsed_data = null) : base()
         {
-            if (parsed_data != null)
+            if (parsed_data == null)
             {
-                if (parsed_data.Type == JTokenType.Array)
+                return;
+            }
+
+            if (parsed_data.Type == JTokenType.Array)
+            {
+                foreach (JToken element in parsed_data.Children())
                 {
-                    foreach (JToken element in parsed_data.Children())
+                    if (element.Type == JTokenType.Object)
                     {
-                        if (element.Type == JTokenType.Object)
-                        {
-                            _events.Add(new Event(element as JObject));
-                        }
+                        _events.Add(new Event(element as JObject));
                     }
+                }
+            }
+            else if (parsed_data.Type == JTokenType.Object)
+            {
+                // The "previously" delta block wraps a single event as
+                // {"event": {...}} instead of emitting a bare array.
+                var wrapped = parsed_data["event"] as JObject;
+                if (wrapped != null)
+                {
+                    _events.Add(new Event(wrapped));
                 }
             }
         }

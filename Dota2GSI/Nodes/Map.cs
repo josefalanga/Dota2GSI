@@ -114,7 +114,12 @@ namespace Dota2GSI.Nodes
         /// <summary>
         /// Neutral team.
         /// </summary>
-        Neutrals = 4
+        Neutrals = 4,
+
+        /// <summary>
+        /// Watcher team (lanterns / watcher units, e.g. <c>npc_dota_lantern</c>).
+        /// </summary>
+        Watcher = 5
     }
 
     /// <summary>

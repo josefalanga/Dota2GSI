@@ -529,7 +529,7 @@ GameState
 |   +-- RegistrationPeriod
 |   +-- BasePrizePool
 |   +-- TotalPrizePool
-|   +-- LeagueNoteID
+|   +-- LeagueNodeID
 |   +-- RadiantTeam
 |   |   +-- TeamID
 |   |   +-- TeamTag

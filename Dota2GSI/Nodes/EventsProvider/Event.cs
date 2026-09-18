@@ -116,7 +116,10 @@ namespace Dota2GSI.Nodes.EventsProvider
         Super_creeps,
 
         /// <summary>New-player reminder surfaced for a player.</summary>
-        New_player_reminder
+        New_player_reminder,
+
+        /// <summary>Smoke of deceit was activated. <see cref="EventData.PlayerID1"/> is the player.</summary>
+        Smoke_activated
     }
 
     /// <summary>
@@ -340,7 +343,7 @@ hashCode = hashCode * -320607063 + BountyValue.GetHashCode();
         /// <summary>Sixth involved player id.</summary>
         public readonly int PlayerID6;
         /// <summary>Event-specific tertiary value.</summary>
-        public readonly int Value3;
+        public readonly long Value3;
         /// <summary>Event-specific time.</summary>
         public readonly double Time;
         /// <summary>Hero id for <see cref="GenericEventType.Hero_banned"/> / <see cref="GenericEventType.Hero_choice_invalid"/>; -1 otherwise.</summary>
@@ -390,7 +393,7 @@ hashCode = hashCode * -320607063 + BountyValue.GetHashCode();
                 PlayerID6 = ReadInt(obj, "playerid6", -1);
                 Value = ReadInt(obj, "value", 0);
                 Value2 = ReadInt(obj, "value2", 0);
-                Value3 = ReadInt(obj, "value3", 0);
+                Value3 = ReadLong(obj, "value3", 0);
                 Time = ReadDouble(obj, "time", 0.0);
             }
             catch
@@ -438,6 +441,14 @@ hashCode = hashCode * -320607063 + BountyValue.GetHashCode();
             if (token == null)
                 return fallback;
             return int.TryParse(token.ToString(), out var i) ? i : fallback;
+        }
+
+        private static long ReadLong(JObject obj, string name, long fallback)
+        {
+            var token = obj[name];
+            if (token == null)
+                return fallback;
+            return long.TryParse(token.ToString(), out var l) ? l : fallback;
         }
 
         private static GenericEventType ParseGenericEventType(string type)

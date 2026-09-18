@@ -61,7 +61,7 @@ namespace Dota2GSI.Nodes.MinimapProvider
             Image = GetString("image");
             Team = GetEnum<PlayerTeam>("team");
             Name = GetString("name");
-            Rotation = GetInt("yaw");
+            Rotation = (int)GetFloat("yaw");
             UnitName = GetString("unitname");
             VisionRange = GetInt("visionrange");
         }

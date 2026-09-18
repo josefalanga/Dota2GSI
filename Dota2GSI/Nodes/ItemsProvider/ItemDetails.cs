@@ -36,9 +36,14 @@ namespace Dota2GSI.Nodes.ItemsProvider
         public Item Teleport = new Item();
 
         /// <summary>
-        /// Gets the neutral item.
+        /// Gets the neutral item in the primary neutral slot (neutral0).
         /// </summary>
         public Item Neutral = new Item();
+
+        /// <summary>
+        /// Gets the neutral item in the secondary neutral slot (neutral1).
+        /// </summary>
+        public Item Neutral1 = new Item();
 
         /// <summary>
         /// List of the preserved neutral items (neutral item slots 6..10).
@@ -48,7 +53,8 @@ namespace Dota2GSI.Nodes.ItemsProvider
         private Regex _slot_regex = new Regex(@"slot(\d+)");
         private Regex _stash_regex = new Regex(@"stash(\d+)");
         private Regex _teleport_regex = new Regex(@"teleport(\d+)");
-        private Regex _neutral_regex = new Regex(@"neutral(\d+)");
+        private Regex _neutral_regex = new Regex(@"^neutral0$");
+        private Regex _neutral1_regex = new Regex(@"^neutral1$");
         private Regex _preserved_neutral_regex = new Regex(@"preserved_neutral(\d+)");
 
         internal ItemDetails(JObject parsed_data = null) : base(parsed_data)
@@ -83,6 +89,12 @@ slots.Add(new System.Collections.Generic.KeyValuePair<int, Item>(
             {
                 Item item = new Item(obj);
                 Neutral = item;
+            });
+
+            GetMatchingObjects(parsed_data, _neutral1_regex, (Match match, JObject obj) =>
+            {
+                Item item = new Item(obj);
+                Neutral1 = item;
             });
 
             GetMatchingObjects(parsed_data, _preserved_neutral_regex, (Match match, JObject obj) =>
@@ -224,6 +236,7 @@ slots.Add(new System.Collections.Generic.KeyValuePair<int, Item>(
                 $"Stash: {Stash}, " +
                 $"Teleport: {Teleport}, " +
                 $"Neutral: {Neutral}, " +
+                $"Neutral1: {Neutral1}, " +
                 $"PreservedNeutral: {PreservedNeutral}, " +
                 $"]";
         }
@@ -241,6 +254,7 @@ slots.Add(new System.Collections.Generic.KeyValuePair<int, Item>(
                 Stash.Equals(other.Stash) &&
                 Teleport.Equals(other.Teleport) &&
                 Neutral.Equals(other.Neutral) &&
+                Neutral1.Equals(other.Neutral1) &&
                 PreservedNeutral.Equals(other.PreservedNeutral);
         }
 
@@ -252,6 +266,7 @@ slots.Add(new System.Collections.Generic.KeyValuePair<int, Item>(
             hashCode = hashCode * -709592358 + Stash.GetHashCode();
             hashCode = hashCode * -709592358 + Teleport.GetHashCode();
             hashCode = hashCode * -709592358 + Neutral.GetHashCode();
+            hashCode = hashCode * -709592358 + Neutral1.GetHashCode();
             hashCode = hashCode * -709592358 + PreservedNeutral.GetHashCode();
             return hashCode;
         }

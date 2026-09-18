@@ -1,5 +1,7 @@
 using Xunit;
 using Newtonsoft.Json.Linq;
+using Dota2GSI.Nodes;
+using Dota2GSI.Nodes.EventsProvider;
 
 namespace Dota2GSI.Tests
 {
@@ -79,6 +81,137 @@ namespace Dota2GSI.Tests
 
             Assert.Equal(21f, state.Map.RadiantGlyphCooldown);
             Assert.Equal(171f, state.Map.DireScanCooldown);
+        }
+
+        [Fact]
+        public void Wearables_TeamPlayers_ParseFromNestedTeamObjects()
+        {
+            // Regression: the player-id scan used to run against the root
+            // object instead of the team object, so team wearables were lost
+            // (137/153 captured paths unreachable).
+            var json = JObject.Parse(@"{
+                ""wearables"": {
+                    ""team2"": {
+                        ""player0"": { ""wearable0"": 1001, ""style0"": 2 },
+                        ""player1"": { ""wearable0"": 1002 }
+                    }
+                }
+            }");
+
+            var state = new GameState(json);
+
+            var radiant = state.Wearables.GetForTeam(PlayerTeam.Radiant);
+            Assert.True(radiant.ContainsKey(0));
+            Assert.True(radiant.ContainsKey(1));
+            Assert.Equal(1001, radiant[0].Wearables[0].ID);
+            Assert.Equal(2, radiant[0].Wearables[0].Style);
+            Assert.Equal(1002, radiant[1].Wearables[0].ID);
+        }
+
+        [Fact]
+        public void PreviouslyEvents_SingleWrappedEvent_ParsesFromObjectShape()
+        {
+            // The "previously" delta block emits events as {"event": {...}}
+            // instead of a bare array; the parser must accept both.
+            var json = JObject.Parse(@"{
+                ""previously"": {
+                    ""events"": {
+                        ""event"": {
+                            ""game_time"": 136,
+                            ""event_type"": ""generic_event"",
+                            ""data"": ""{\""type\"":\""CHAT_MESSAGE_INTHEBAG\"",\""playerid1\"":0}""
+                        }
+                    }
+                }
+            }");
+
+            var state = new GameState(json);
+
+            Assert.Equal(1, state.Previously.Events.Count);
+            Assert.Equal(136, state.Previously.Events[0].GameTime);
+            Assert.Equal(GenericEventType.Inthebag, state.Previously.Events[0].Data.GenericType);
+        }
+
+        [Fact]
+        public void MinimapElement_WatcherTeamFive_ParsesAsWatcher()
+        {
+            // Watcher units (npc_dota_lantern) report team 5, previously an
+            // unnamed enum member that fell through to Undefined.
+            var json = JObject.Parse(@"{
+                ""minimap"": {
+                    ""o100"": { ""xpos"": 940, ""ypos"": 80, ""team"": 5 }
+                }
+            }");
+
+            var state = new GameState(json);
+
+            var watcher = state.Minimap.GetForTeam(PlayerTeam.Watcher);
+            Assert.True(watcher.Count > 0);
+        }
+
+        [Fact]
+        public void NeutralItems_BothSlots_ParseWithoutOverwrite()
+        {
+            // Both neutral0 and neutral1 are emitted; neutral1 used to
+            // overwrite neutral0, losing the primary neutral item.
+            var json = JObject.Parse(@"{
+                ""items"": {
+                    ""local"": {
+                    },
+                    ""team2"": {
+                        ""player0"": {
+                            ""neutral0"": { ""name"": ""item_story_walker"" },
+                            ""neutral1"": { ""name"": ""item_lance_of_avernus"" }
+                        }
+                    }
+                }
+            }");
+
+            var state = new GameState(json);
+
+            var player = state.Items.GetForTeam(PlayerTeam.Radiant)[0];
+            Assert.Equal("item_story_walker", player.Neutral.Name);
+            Assert.Equal("item_lance_of_avernus", player.Neutral1.Name);
+        }
+
+        [Fact]
+        public void GenericEvent_Value3Overflow_ParsesAsLong()
+        {
+            // STREAK_KILL broadcasts carry uint-max (-1) in value3, which
+            // overflows int parsing and collapsed to 0.
+            var json = JObject.Parse(@"{
+                ""events"": [
+                    {
+                        ""game_time"": 300,
+                        ""event_type"": ""generic_event"",
+                        ""data"": ""{\""type\"":\""CHAT_MESSAGE_STREAK_KILL\"",\""value\"":121,\""value2\"":0,\""value3\"":4294967295,\""playerid1\"":8}""
+                    }
+                ]
+            }");
+
+            var state = new GameState(json);
+
+            Assert.Equal(1, state.Events.Count);
+            Assert.Equal(GenericEventType.Streak_kill, state.Events[0].Data.GenericType);
+            Assert.Equal(4294967295L, state.Events[0].Data.Value3);
+        }
+
+        [Fact]
+        public void Yaw_FloatValues_ParseWithoutCrashing()
+        {
+            // yaw arrives as whole ints today but can be fractional; int
+            // parsing ("135.5") throws, float parsing must not.
+            var json = JObject.Parse(@"{
+                ""roshan"": { ""yaw"": 135.5 },
+                ""couriers"": { ""courier0"": { ""yaw"": 75.25 } },
+                ""minimap"": { ""o5"": { ""yaw"": 12.75 } }
+            }");
+
+            var state = new GameState(json);
+
+            Assert.Equal(135, state.Roshan.Rotation);
+            Assert.Equal(75, state.Couriers.CouriersMap[0].Rotation);
+            Assert.Equal(12, state.Minimap.Elements[5].Rotation);
         }
     }
 }

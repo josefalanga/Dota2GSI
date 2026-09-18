@@ -258,7 +258,7 @@ namespace Dota2GSI
             Hero = SafeCreate(() => new Hero(GetJObject("hero")), new Hero());
             Abilities = SafeCreate(() => new Abilities(GetJObject("abilities")), new Abilities());
             Items = SafeCreate(() => new Items(GetJObject("items")), new Items());
-            Events = SafeCreate(() => new Events(GetJArray("events")), new Events());
+            Events = SafeCreate(() => new Events(GetJToken("events")), new Events());
             Buildings = SafeCreate(() => new Buildings(GetJObject("buildings")), new Buildings());
             League = SafeCreate(() => new League(GetJObject("league")), new League());
             Draft = SafeCreate(() => new Draft(GetJObject("draft")), new Draft());
