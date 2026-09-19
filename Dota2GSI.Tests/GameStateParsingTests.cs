@@ -222,11 +222,37 @@ namespace Dota2GSI.Tests
         }
 
         [Fact]
-        public void GenericEvent_ChatMessageChoiceInvalid_ParsesHeroIdAndSlot()
+        public void GenericEvent_ChatMessageChoiceInvalid_ParsesHeroIdAndCollidingSlots()
         {
-            // A pick attempt rejected during the draft: value is the hero id
-            // and playerid1 is the attempting player's slot (0-4 radiant,
-            // 5-9 dire), not a colliding player pair as previously documented.
+            // A blind-pick collision during the draft: two players picked the
+            // same hero, which is then banned. value is the hero id and
+            // playerid1/playerid2 are the two colliding slots (0-4 radiant,
+            // 5-9 dire).
+            var json = JObject.Parse(@"{
+                ""events"": [
+                    {
+                        ""game_time"": 97,
+                        ""event_type"": ""generic_event"",
+                        ""data"": ""{\""type\"":\""CHAT_MESSAGE_HERO_CHOICE_INVALID\"",\""value\"":44,\""playerid1\"":9,\""playerid2\"":1,\""time\"":-2.5}""
+                    }
+                ]
+            }");
+
+            var state = new GameState(json);
+
+            Assert.Equal(1, state.Events.Count);
+            Assert.Equal(GenericEventType.Hero_choice_invalid, state.Events[0].Data.GenericType);
+            Assert.Equal(44, state.Events[0].Data.HeroId);
+            Assert.Equal(9, state.Events[0].Data.PlayerID1);
+            Assert.Equal(1, state.Events[0].Data.PlayerID2);
+            Assert.Equal(44, state.Events[0].Data.Value);
+        }
+
+        [Fact]
+        public void GenericEvent_ChatMessageChoiceInvalid_SinglePlayer_ReportsMinusOneForSecondSlot()
+        {
+            // With only one involved player (picking a banned/unavailable hero)
+            // playerid2 is the -1 sentinel, not a second colliding slot.
             var json = JObject.Parse(@"{
                 ""events"": [
                     {
@@ -239,11 +265,10 @@ namespace Dota2GSI.Tests
 
             var state = new GameState(json);
 
-            Assert.Equal(1, state.Events.Count);
             Assert.Equal(GenericEventType.Hero_choice_invalid, state.Events[0].Data.GenericType);
             Assert.Equal(35, state.Events[0].Data.HeroId);
             Assert.Equal(9, state.Events[0].Data.PlayerID1);
-            Assert.Equal(35, state.Events[0].Data.Value);
+            Assert.Equal(-1, state.Events[0].Data.PlayerID2);
         }
 
         [Fact]
