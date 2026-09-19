@@ -222,6 +222,31 @@ namespace Dota2GSI.Tests
         }
 
         [Fact]
+        public void GenericEvent_ChatMessageChoiceInvalid_ParsesHeroIdAndSlot()
+        {
+            // A pick attempt rejected during the draft: value is the hero id
+            // and playerid1 is the attempting player's slot (0-4 radiant,
+            // 5-9 dire), not a colliding player pair as previously documented.
+            var json = JObject.Parse(@"{
+                ""events"": [
+                    {
+                        ""game_time"": 78,
+                        ""event_type"": ""generic_event"",
+                        ""data"": ""{\""type\"":\""CHAT_MESSAGE_HERO_CHOICE_INVALID\"",\""value\"":35,\""playerid1\"":9,\""playerid2\"":-1,\""time\"":-2.5}""
+                    }
+                ]
+            }");
+
+            var state = new GameState(json);
+
+            Assert.Equal(1, state.Events.Count);
+            Assert.Equal(GenericEventType.Hero_choice_invalid, state.Events[0].Data.GenericType);
+            Assert.Equal(35, state.Events[0].Data.HeroId);
+            Assert.Equal(9, state.Events[0].Data.PlayerID1);
+            Assert.Equal(35, state.Events[0].Data.Value);
+        }
+
+        [Fact]
         public void Yaw_FloatValues_ParseWithoutCrashing()
         {
             // yaw arrives as whole ints today but can be fractional; int

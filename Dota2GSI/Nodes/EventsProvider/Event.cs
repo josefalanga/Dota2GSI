@@ -67,7 +67,10 @@ namespace Dota2GSI.Nodes.EventsProvider
         /// <summary>A hero was banned during draft. <see cref="EventData.Value"/> is the banned hero id.</summary>
         Hero_banned,
 
-        /// <summary>Two players collided on a blind pick and the hero was unpicked and banned. <see cref="EventData.Value"/> is the hero id; <see cref="EventData.PlayerID1"/> and <see cref="EventData.PlayerID2"/> are the colliding players.</summary>
+        /// <summary>A player's pick attempt was rejected because the hero is
+        /// banned or otherwise unavailable. <see cref="EventData.Value"/> is the
+        /// hero id; <see cref="EventData.PlayerID1"/> is the attempting player's
+        /// slot (0-4 radiant, 5-9 dire).</summary>
         Hero_choice_invalid,
 
         /// <summary>A hero was killed. <see cref="EventData.PlayerID1"/> is the killer, <see cref="EventData.PlayerID2"/> the victim.</summary>
