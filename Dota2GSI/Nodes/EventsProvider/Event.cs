@@ -118,6 +118,12 @@ namespace Dota2GSI.Nodes.EventsProvider
         /// <summary>New-player reminder surfaced for a player.</summary>
         New_player_reminder,
 
+        /// <summary>A player randomed a hero during the pick phase.
+        /// <see cref="EventData.PlayerID1"/> is the randomed hero id and
+        /// <see cref="EventData.Value"/> is the player's slot (0-4 radiant,
+        /// 5-9 dire).</summary>
+        Random,
+
         /// <summary>Smoke of deceit was activated. <see cref="EventData.PlayerID1"/> is the player.</summary>
         Smoke_activated
     }
@@ -346,7 +352,7 @@ hashCode = hashCode * -320607063 + BountyValue.GetHashCode();
         public readonly long Value3;
         /// <summary>Event-specific time.</summary>
         public readonly double Time;
-        /// <summary>Hero id for <see cref="GenericEventType.Hero_banned"/> / <see cref="GenericEventType.Hero_choice_invalid"/>; -1 otherwise.</summary>
+        /// <summary>Hero id for <see cref="GenericEventType.Hero_banned"/> / <see cref="GenericEventType.Hero_choice_invalid"/> / <see cref="GenericEventType.Random"/>; -1 otherwise.</summary>
         public readonly int HeroId;
         /// <summary>Item id for <see cref="GenericEventType.Item_purchase"/>; 0 otherwise.</summary>
         public readonly int ItemId;
@@ -406,6 +412,9 @@ hashCode = hashCode * -320607063 + BountyValue.GetHashCode();
                 case GenericEventType.Hero_banned:
                 case GenericEventType.Hero_choice_invalid:
                     HeroId = Value;
+                    break;
+                case GenericEventType.Random:
+                    HeroId = PlayerID1;
                     break;
                 case GenericEventType.Item_purchase:
                     ItemId = Value;

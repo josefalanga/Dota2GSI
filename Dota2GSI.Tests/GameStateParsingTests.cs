@@ -197,6 +197,31 @@ namespace Dota2GSI.Tests
         }
 
         [Fact]
+        public void GenericEvent_ChatMessageRandom_ParsesHeroIdAndSlot()
+        {
+            // A hero randomed during the pick phase: playerid1 is the randomed
+            // hero id and value is the player's slot (0-4 radiant, 5-9 dire).
+            // Untyped before, the raw payload was unusable for the lineup.
+            var json = JObject.Parse(@"{
+                ""events"": [
+                    {
+                        ""game_time"": 55,
+                        ""event_type"": ""generic_event"",
+                        ""data"": ""{\""type\"":\""CHAT_MESSAGE_RANDOM\"",\""playerid1\"":72,\""value\"":6,\""playerid2\"":-1,\""playerid3\"":-1,\""time\"":-22.8}""
+                    }
+                ]
+            }");
+
+            var state = new GameState(json);
+
+            Assert.Equal(1, state.Events.Count);
+            Assert.Equal(GenericEventType.Random, state.Events[0].Data.GenericType);
+            Assert.Equal(72, state.Events[0].Data.HeroId);
+            Assert.Equal(72, state.Events[0].Data.PlayerID1);
+            Assert.Equal(6, state.Events[0].Data.Value);
+        }
+
+        [Fact]
         public void Yaw_FloatValues_ParseWithoutCrashing()
         {
             // yaw arrives as whole ints today but can be fractional; int
