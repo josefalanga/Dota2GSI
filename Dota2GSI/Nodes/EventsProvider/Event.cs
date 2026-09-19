@@ -108,7 +108,10 @@ namespace Dota2GSI.Nodes.EventsProvider
         /// <summary>A player bought back. <see cref="EventData.PlayerID1"/> is the player.</summary>
         Buyback,
 
-        /// <summary>An item was placed in the neutral-item bag. <see cref="EventData.PlayerID1"/> is the player.</summary>
+        /// <summary>A player predicted their own victory before the horn using the
+        /// Victory Prediction action item ("this match is in the bag").
+        /// <see cref="EventData.PlayerID1"/> is the predicting player's slot
+        /// (0-4 radiant, 5-9 dire); <see cref="EventData.Value"/> is always 0.</summary>
         Inthebag,
 
         /// <summary>An observer ward was destroyed. <see cref="EventData.PlayerID1"/> is the killer.</summary>
